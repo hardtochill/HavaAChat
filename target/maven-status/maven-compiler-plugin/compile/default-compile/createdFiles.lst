@@ -1,6 +1,0 @@
-cn\havaachat\pojo\vo\ResultVO.class
-cn\havaachat\constants\ResultEnum.class
-cn\havaachat\utils\ResponseUtils.class
-cn\havaachat\utils\JacksonObjectMapper.class
-cn\havaachat\controller\AccountController.class
-cn\havaachat\config\WebMvcConfiguration.class
