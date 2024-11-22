@@ -1,0 +1,83 @@
+server:
+  port: 8080
+  servlet:
+    # 所有请求路径前缀
+    context-path: /api
+    #session过期时间 1h
+    session:
+      timeout: PT60M
+
+ws:
+  #请求路径
+  path: /ws
+  #websocket端口
+  port: 8081
+
+spring:
+  mvc:
+    #favicon处理
+    favicon:
+      enabled: false
+    #错误页处理
+    throw-exception-if-no-handler-found: true
+  servlet:
+    multipart:
+      max-file-size: 15MB
+      max-request-size: 15MB
+  web:
+    resources:
+      add-mappings: false
+  datasource:
+    url: jdbc:mysql://localhost:3306/hava-a-chat?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    username: root
+    password: Liangqizhe73@
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      pool-name: HikariCPDatasource
+      minimum-idle: 5
+      idle-timeout: 180000
+      maximum-pool-size: 10
+      auto-commit: true
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+  redis:
+    database: 5
+    host: localhost
+    password: 123456
+    port: 6379
+    jedis:
+      pool:
+        #连接池最大连接数(负值表示没有限制)
+        max-active: 20
+        #连接池最大阻塞等待时间(负值表示没有限制)
+        max-wait: -1
+        #连接池最大空闲连接
+        max-idle: 10
+        #连接池最小空闲连接
+        min-idle: 0
+    timeout: 2000
+# logback
+logback:
+  project:
+    folder: D:/java/idea/AllProjects/have-a-chat-workspace/file-space/
+  log:
+    root:
+      level: info
+
+# 是否是开发环境
+dev: false
+# 超级管理员组
+admin:
+  emails: test@qq.com
+# 文件本地存放路径
+project:
+  folder: D:/java/idea/AllProjects/have-a-chat-workspace/file-space/
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+  # mapperXML文件路径
+  mapper-locations: classpath:mapper/*.xml
+  # 实体类所在包
+  type-aliases-package: cn.havaachat.pojo.entity

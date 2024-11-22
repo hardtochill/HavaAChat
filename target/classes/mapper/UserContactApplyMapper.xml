@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.havaachat.mapper.UserContactApplyMapper">
+    <insert id="insert">
+        insert into user_contact_apply(apply_user_id, receive_user_id, contact_id, contact_type, status, apply_info, last_apply_time, create_time, update_time)
+        values (#{applyUserId}, #{receiveUserId}, #{contactId}, #{contactType}, #{status}, #{applyInfo}, #{lastApplyTime}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="update">
+        update user_contact_apply
+        <set>
+            <if test="applyUserId != null">apply_user_id = #{applyUserId},</if>
+            <if test="receiveUserId != null">receive_user_id = #{receiveUserId},</if>
+            <if test="contactId != null">contact_id = #{contactId},</if>
+            <if test="contactType != null">contact_type = #{contactType},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="applyInfo != null">apply_info = #{applyInfo},</if>
+            <if test="lastApplyTime != null">last_apply_time = #{lastApplyTime},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+            where apply_id = #{applyId}
+    </update>
+
+    <select id="findBatchWithContactNameByReceiveUserId" resultType="cn.havaachat.pojo.entity.UserContactApply">
+        select ucp.*,
+               case
+                   when ucp.contact_type=0 then ui.nick_name
+                   when ucp.contact_type=1 then gi.group_name
+                   end as contact_name
+        from user_contact_apply ucp left outer join user_info ui on ucp.apply_user_id=ui.user_id
+        left outer join group_info gi on ucp.contact_id=gi.group_id
+        where ucp.receive_user_id=#{receiveUserId}
+        order by ucp.last_apply_time desc
+    </select>
+</mapper>

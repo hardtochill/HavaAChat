@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.havaachat.mapper.UserInfoMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="userId">
+        insert into user_info(user_id,email,nick_name,join_type,sex,password,personal_signature,status,create_time,update_time,area_name,area_code)
+        values(#{userId},#{email},#{nickName},#{joinType},#{sex},#{password},#{personalSignature},#{status},#{createTime},#{updateTime},#{areaName},#{areaCode})
+    </insert>
+    <update id="update">
+        update user_info
+        <set>
+            <if test="email!=null">email=#{email},</if>
+            <if test="nickName!=null">nick_name=#{nickName},</if>
+            <if test="joinType!=null">join_type=#{joinType},</if>
+            <if test="sex!=null">sex=#{sex},</if>
+            <if test="password!=null">password=#{password},</if>
+            <if test="personalSignature!=null">personal_signature=#{personalSignature},</if>
+            <if test="status!=null">status=#{status},</if>
+            <if test="lastLoginTime!=null">last_login_time=#{lastLoginTime},</if>
+            <if test="areaName!=null">area_name=#{areaName},</if>
+            <if test="areaCode!=null">area_code=#{areaCode},</if>
+            <if test="lastOffTime!=null">last_off_time=#{lastOffTime},</if>
+            <if test="updateTime!=null">update_time=#{updateTime},</if>
+        </set>
+            where user_id=#{userId}
+    </update>
+    <!--分页查询-->
+    <select id="findBatch" resultType="cn.havaachat.pojo.entity.UserInfo">
+        select * from user_info
+        <where>
+            <if test="userId!=null">and user_id=#{userId}</if>
+            <if test="email!=null">and email=#{email}</if>
+            <if test="nickName!=null">and nick_name like concat('%',#{nickName},'%')</if>
+            <if test="joinType!=null">and join_type=#{joinType}</if>
+            <if test="sex!=null">and sex=#{sex}</if>
+            <if test="password!=null">and password=#{password}</if>
+            <if test="personalSignature!=null">and personal_signature=#{personalSignature}</if>
+            <if test="status!=null">status=and #{status}</if>
+            <if test="lastLoginTime!=null">and last_login_time=#{lastLoginTime}</if>
+            <if test="areaName!=null">and area_name=#{areaName}</if>
+            <if test="areaCode!=null">and area_code=#{areaCode}</if>
+            <if test="lastOffTime!=null">and last_off_time=#{lastOffTime}</if>
+            <if test="updateTime!=null">and update_time=#{updateTime}</if>
+        </where>
+        order by update_time desc
+    </select>
+</mapper>

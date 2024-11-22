@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.havaachat.mapper.UserContactMapper">
+    <!--插入-->
+    <insert id="insert">
+        insert into user_contact (user_id, contact_id, contact_type, status, create_time, update_time)
+        values (#{userId}, #{contactId}, #{contactType}, #{status}, #{createTime},#{updateTime})
+    </insert>
+    <!--批量插入-->
+    <insert id="insertBatch">
+        insert into user_contact(user_id, contact_id, contact_type, status, create_time, update_time)
+        value
+        <foreach collection="userContactList" item="uc" separator=",">
+            (#{uc.userId}, #{uc.contactId}, #{uc.contactType}, #{uc.status}, #{uc.createTime}, #{uc.updateTime})
+        </foreach>
+    </insert>
+    <!--修改-->
+    <update id="updateByUserIdAndContactId">
+        update user_contact
+        <set>
+            <if test="contactType!=null">contact_type = #{contactType},</if>
+            <if test="status!=null">status = #{status},</if>
+            <if test="createTime!=null">create_time = #{createTime},</if>
+            <if test="updateTime!=null">update_time = #{updateTime},</if>
+        </set>
+            where user_id=#{userId} and contact_id=#{contactId}
+    </update>
+    <!--批量修改-->
+    <update id="updateBatch">
+        <foreach collection="userContactList" item="uc" separator=";">
+            update user_contact
+            <set>
+                <if test="uc.contactType!=null">contact_type=#{uc.contactType},</if>
+                <if test="uc.status!=null">status=#{uc.status},</if>
+                <if test="uc.createTime!=null">create_time = #{uc.createTime},</if>
+                <if test="uc.updateTime!=null">update_time = #{uc.updateTime},</if>
+            </set>
+            where
+                user_id=#{uc.userId} and contact_id=#{uc.contactId}
+        </foreach>
+    </update>
+    <!--查询用户联系人列表-->
+    <select id="findBatchWithContactNameByUserIdAndContactTypeAndStatusList"
+            resultType="cn.havaachat.pojo.vo.UserContactLoadResultVO">
+        select uc.*,
+            <if test="contactType==0">
+                ui.nick_name
+            </if>
+            <if test="contactType==1">
+                gi.group_name
+            </if> as contact_name
+        from user_contact uc
+            <if test="contactType==0">
+                left outer join user_info ui on uc.contact_id = ui.user_id
+            </if>
+            <if test="contactType==1">
+                left outer join group_info gi on uc.contact_id = gi.group_id
+            </if>
+        where uc.user_id = #{userId} and uc.contact_type = #{contactType}
+             <if test="contactType==1">
+                 and gi.group_owner_id!=uc.user_id
+             </if>
+               and uc.status in
+        <foreach collection="statusList" item="status" open="(" separator="," close=")">
+            #{status}
+        </foreach>
+        order by uc.update_time desc
+    </select>
+</mapper>
