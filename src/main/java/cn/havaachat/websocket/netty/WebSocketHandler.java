@@ -46,7 +46,7 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
         Channel channel = ctx.channel();
         // 获取该channel的userId
         String userId = channelContextUtils.getUserIdByChannel(channel);
-        log.info("netty:收到消息：userId={}，message=\"{}\"",userId,textWebSocketFrame.text());
+        //log.info("netty:收到消息：userId={}，message=\"{}\"",userId,textWebSocketFrame.text());
         // 更新用户心跳
         redisService.saveUserHeartBeat(userId);
     }

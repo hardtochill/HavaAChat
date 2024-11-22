@@ -18,7 +18,7 @@ public class WsInitDataDTO {
     /**
      * 会话用户列表
      */
-    private List<ChatSessionUser> chatSessionUserList;
+    private List<ChatSessionUser> chatSessionList;
     /**
      * 离线时收到的信息
      */

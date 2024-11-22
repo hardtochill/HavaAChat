@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${hava-a-chat.server.port}
   servlet:
     # 所有请求路径前缀
     context-path: /api
@@ -11,9 +11,11 @@ ws:
   #请求路径
   path: /ws
   #websocket端口
-  port: 8081
+  port: ${hava-a-chat.ws.port}
 
 spring:
+  profiles:
+    active: dev
   mvc:
     #favicon处理
     favicon:
@@ -29,8 +31,8 @@ spring:
       add-mappings: false
   datasource:
     url: jdbc:mysql://localhost:3306/hava-a-chat?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowMultiQueries=true
-    username: root
-    password: Liangqizhe73@
+    username: ${hava-a-chat.datasource.username}
+    password: ${hava-a-chat.datasource.password}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       pool-name: HikariCPDatasource
@@ -42,10 +44,10 @@ spring:
       connection-timeout: 30000
       connection-test-query: SELECT 1
   redis:
-    database: 5
-    host: localhost
-    password: 123456
-    port: 6379
+    database: ${hava-a-chat.redis.database}
+    host: ${hava-a-chat.redis.host}
+    password: ${hava-a-chat.redis.password}
+    port: ${hava-a-chat.redis.port}
     jedis:
       pool:
         #连接池最大连接数(负值表示没有限制)
@@ -60,19 +62,16 @@ spring:
 # logback
 logback:
   project:
-    folder: D:/java/idea/AllProjects/have-a-chat-workspace/file-space/
+    folder: ${hava-a-chat.project.folder}
   log:
     root:
       level: info
-
-# 是否是开发环境
-dev: false
 # 超级管理员组
 admin:
   emails: test@qq.com
 # 文件本地存放路径
 project:
-  folder: D:/java/idea/AllProjects/have-a-chat-workspace/file-space/
+  folder: ${hava-a-chat.project.folder}
 
 mybatis:
   configuration:

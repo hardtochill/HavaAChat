@@ -39,7 +39,7 @@ public class RedisServiceImpl implements RedisService{
      * @param userId
      */
     public void saveUserHeartBeat(String userId){
-        log.info("存储用户心跳：userId={}",userId);
+        //log.info("存储用户心跳：userId={}",userId);
         redisUtils.set(StringUtils.getRedisWsUserHeartbeatKey(userId),System.currentTimeMillis(),RedisConstants.REDIS_KEY_EXPIRES_HEART_BEAT);
     }
 
@@ -119,11 +119,11 @@ public class RedisServiceImpl implements RedisService{
      */
     @Override
     public List<String> getUserContactIdList(String userId) {
-        // todo 如何将List<Object>转List<String>
         List<Object> objectList = redisUtils.lGet(StringUtils.getRedisUserContactKey(userId), 0, -1);
         List<String> resultList = new ArrayList<>();
         for (Object o : objectList) {
-            resultList.add((String)o);
+            List<String> oL = (List<String>)o;
+            resultList.add(String.join("",oL));
         }
         return resultList;
     }

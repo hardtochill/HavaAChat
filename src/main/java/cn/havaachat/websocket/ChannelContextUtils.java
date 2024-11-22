@@ -19,6 +19,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Netty的Channel工具类
  */
 @Component
+@Slf4j
 public class ChannelContextUtils {
     /**
      * 由于Channel对象无法序列化，无法存入Redis；因此定义线程安全的ConcurrentHashMap进行全局存储
@@ -92,7 +94,7 @@ public class ChannelContextUtils {
 
         // 1.查询会话用户列表
         List<ChatSessionUser> chatSessionUserList = chatSessionUserMapper.findBatchWithSessionByUserId(userId);
-        wsInitDataDTO.setChatSessionUserList(chatSessionUserList);
+        wsInitDataDTO.setChatSessionList(chatSessionUserList);
 
         // 2.查询用户离线时收到的消息
         // 自最后一次离线后，离最近3天收到的消息；即若用户一年未登录，则再次登陆时只向其发送最近3天收到的消息

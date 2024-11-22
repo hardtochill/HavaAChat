@@ -5,7 +5,7 @@
     <!--批量查询用户会话对象及其lastMessage、lastReceiveTime和memberCount-->
     <select id="findBatchWithSessionByUserId" resultType="cn.havaachat.pojo.entity.ChatSessionUser">
         select csu.*,cs.last_message as lastMessage,cs.last_receive_time as lastReceiveTime,
-               case when substring(csu.contact_id,1,1) = `G` then (select count(1) from user_contact uc where uc.contact_id = csu.contact_id)
+               case when substring(csu.contact_id,1,1)='G' then (select count(1) from user_contact uc where uc.contact_id = csu.contact_id)
                else 0
                end as memberCount
         from chat_session_user csu inner join chat_session cs on csu.session_id = cs.session_id

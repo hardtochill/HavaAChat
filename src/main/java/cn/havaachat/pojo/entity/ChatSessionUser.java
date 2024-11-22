@@ -1,5 +1,6 @@
 package cn.havaachat.pojo.entity;
 
+import cn.havaachat.enums.UserContactTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,10 @@ public class ChatSessionUser extends BaseEntity{
      */
     private String contactId;
     /**
+     * 联系人类型
+     */
+    private Integer contactType;
+    /**
      * 会话id
      */
     private String sessionId;
@@ -39,4 +44,7 @@ public class ChatSessionUser extends BaseEntity{
      * 如果是群聊，则还要查询群聊的人数
      */
     private Integer memberCount;
+    public Integer getContactType(){
+        return UserContactTypeEnum.getById(contactId).getType();
+    }
 }
