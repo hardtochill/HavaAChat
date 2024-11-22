@@ -60,4 +60,13 @@ public interface UserContactApplyMapper {
      */
     @Update("update user_contact_apply set status=#{targetStatus},update_time=#{updateTime} where apply_id=#{applyId} and status=#{originStatus}")
     Integer updateStatusAndUpdateTimeByApplyIdAndStatus(Integer applyId, Integer originStatus, Integer targetStatus, LocalDateTime updateTime);
+
+    /**
+     * 根据接收者id和申请状态，查询申请数量
+     * @param receiveUserId
+     * @param status
+     * @return
+     */
+    @Select("select count(*) from user_contact_apply where receive_user_id=#{receiveUserId} and status=#{status}")
+    Integer countByReceiveUserIdAndStatus(String receiveUserId,Integer status);
 }

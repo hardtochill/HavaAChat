@@ -8,4 +8,13 @@
         values
             (#{sessionId}, #{messageType}, #{messageContent}, #{sendUserId}, #{sendUserNickName}, #{sendTime}, #{contactId}, #{contactType},#{fileSize},#{fileName},#{fileType},#{status},#{createTime},#{updateTime})#{fileSize
     </insert>
+    <!--查询用户在指定时间内应该收到的所有消息-->
+    <select id="findBatchByContactIdListAndTime" resultType="cn.havaachat.pojo.entity.ChatMessage">
+        select * from chat_message
+        where contact_id in
+        <foreach collection="contactIdList" item="contactId" open="(" separator="," close=")">
+            #{contactId}
+        </foreach>
+        and send_time &gt;= #{lastReceiveTime}
+    </select>
 </mapper>

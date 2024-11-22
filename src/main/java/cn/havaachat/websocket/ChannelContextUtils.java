@@ -2,11 +2,15 @@ package cn.havaachat.websocket;
 
 import cn.havaachat.constants.ContactConstants;
 import cn.havaachat.enums.MessageTypeEnum;
+import cn.havaachat.enums.UserContactApplyStatusEnum;
 import cn.havaachat.enums.UserContactTypeEnum;
+import cn.havaachat.mapper.ChatMessageMapper;
 import cn.havaachat.mapper.ChatSessionUserMapper;
+import cn.havaachat.mapper.UserContactApplyMapper;
 import cn.havaachat.mapper.UserInfoMapper;
 import cn.havaachat.pojo.dto.MessageSendDTO;
 import cn.havaachat.pojo.dto.WsInitDataDTO;
+import cn.havaachat.pojo.entity.ChatMessage;
 import cn.havaachat.pojo.entity.ChatSessionUser;
 import cn.havaachat.pojo.entity.UserInfo;
 import cn.havaachat.redis.RedisService;
@@ -26,6 +30,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Netty的Channel工具类
@@ -43,11 +48,16 @@ public class ChannelContextUtils {
    private RedisService redisService;
    private UserInfoMapper userInfoMapper;
    private ChatSessionUserMapper chatSessionUserMapper;
+   private ChatMessageMapper chatMessageMapper;
+   private UserContactApplyMapper userContactApplyMapper;
    @Autowired
-   public ChannelContextUtils(RedisService redisService,UserInfoMapper userInfoMapper,ChatSessionUserMapper chatSessionUserMapper){
+   public ChannelContextUtils(RedisService redisService,UserInfoMapper userInfoMapper,ChatSessionUserMapper chatSessionUserMapper,
+                              ChatMessageMapper chatMessageMapper,UserContactApplyMapper userContactApplyMapper){
        this.redisService = redisService;
        this.userInfoMapper = userInfoMapper;
        this.chatSessionUserMapper = chatSessionUserMapper;
+       this.chatMessageMapper = chatMessageMapper;
+       this.userContactApplyMapper = userContactApplyMapper;
    }
 
     /**
@@ -102,15 +112,23 @@ public class ChannelContextUtils {
         // 若用户离线时间未超过3天，则以用户离线时间为查询时间点
         Long lastOffTime = userInfo.getLastOffTime();
         // 若用户离线时间超过3天，则以最近3天为查询时间点
-        if (userInfo.getLastOffTime()!=null && System.currentTimeMillis()-userInfo.getLastOffTime()> ContactConstants.MILLION_SECONDS_3_DAY){
-            lastOffTime = ContactConstants.MILLION_SECONDS_3_DAY;
+        Long now = System.currentTimeMillis();
+        if (userInfo.getLastOffTime()!=null && now-userInfo.getLastOffTime()> ContactConstants.MILLION_SECONDS_3_DAY){
+            lastOffTime = now-ContactConstants.MILLION_SECONDS_3_DAY;
         }
+        // 以用户和用户所在的群聊作为contactIdList，去查询ChatMessage
+        List<String> receiveContactIdList = userContactIdList.stream().filter(item -> item.startsWith(UserContactTypeEnum.GROUP.getPrefix())).collect(Collectors.toList());
+        receiveContactIdList.add(userId);
+        List<ChatMessage> chatMessageList = chatMessageMapper.findBatchByContactIdListAndTime(receiveContactIdList,lastOffTime);
+        wsInitDataDTO.setChatMessageList(chatMessageList);
 
         // 3.查询用户收到的好友申请数量
+        Integer applyCount = userContactApplyMapper.countByReceiveUserIdAndStatus(userId, UserContactApplyStatusEnum.INIT.getStatus());
+        wsInitDataDTO.setApplyCount(applyCount);
 
         // 向刚登陆用户发送初始信息
         MessageSendDTO messageSendDTO = new MessageSendDTO();
-        messageSendDTO.setMessageType(MessageTypeEnum.INIT.getType());
+        messageSendDTO.setMessageType(MessageTypeEnum .INIT.getType());
         messageSendDTO.setContactId(userId);
         messageSendDTO.setExtendData(wsInitDataDTO);
         sendMessage(messageSendDTO,userId);
