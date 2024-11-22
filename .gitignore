@@ -4,6 +4,7 @@
 *.ipr
 .mvn
 mvnw*
+target
 
 #配置文件
 application-dev.yml
