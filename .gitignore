@@ -5,6 +5,7 @@
 .mvn
 mvnw*
 target
+log.*
 
 #配置文件
 application-dev.yml
