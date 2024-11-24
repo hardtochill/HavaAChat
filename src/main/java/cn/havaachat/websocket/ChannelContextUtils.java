@@ -133,27 +133,6 @@ public class ChannelContextUtils {
         messageSendDTO.setExtendData(wsInitDataDTO);
         sendMessage(messageSendDTO,userId);
     }
-
-    /**
-     * 向目标对象发送消息
-     * @param messageSendDTO
-     * @param receiveId
-     */
-    public static void sendMessage(MessageSendDTO messageSendDTO,String receiveId){
-        if (null==receiveId){
-            return;
-        }
-        // 服务端与消息接收方的channel
-        Channel receiveChannel = USER_CONTEXT_MAP.get(receiveId);
-        if (null==receiveChannel){
-            return;
-        }
-        // A给B发消息，对于消息接收者B来说，这条消息的发送者A就是联系人
-        messageSendDTO.setContactId(messageSendDTO.getSendUserId());
-        messageSendDTO.setContactName(messageSendDTO.getSendUserNickName());
-        receiveChannel.writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(messageSendDTO)));
-    }
-
     /***
      * 将用户加入其所有的GroupChannel，使其能接收到群聊信息
      * @param userId
@@ -204,4 +183,87 @@ public class ChannelContextUtils {
         Attribute<String> channelAttribute = channel.attr(AttributeKey.valueOf(channel.id().toString()));
         return channelAttribute.get();
     }
+
+
+    /**
+     * 检查消息类型并发送消息
+     * @param messageSendDTO
+     */
+    public void checkAndSendMessage(MessageSendDTO messageSendDTO){
+        // 获取消息发送类型是单聊还是群聊
+        UserContactTypeEnum userContactTypeEnum = UserContactTypeEnum.getById(messageSendDTO.getContactId());
+        switch (userContactTypeEnum){
+            case USER:
+                send2User(messageSendDTO);
+                break;
+            case GROUP:
+                send2Group(messageSendDTO);
+                break;
+        }
+    }
+
+    /**
+     * 向用户发送单聊消息
+     * @param messageSendDTO
+     */
+    public void send2User(MessageSendDTO messageSendDTO){
+        String contactId = messageSendDTO.getContactId();
+        if (StringUtils.isEmpty(contactId)){
+            return;
+        }
+        sendMessage(messageSendDTO,contactId);
+        // 如果该消息是让用户强制下线，则令用户下线
+        if(MessageTypeEnum.FORCE_OFF_LINE.getType().equals(messageSendDTO.getMessageType())){
+            closeContext(contactId);
+        }
+    }
+    /**
+     * 发送消息
+     * @param messageSendDTO
+     * @param receiveId
+     */
+    public void sendMessage(MessageSendDTO messageSendDTO, String receiveId){
+        // 服务端与消息接收方的channel
+        Channel receiveChannel = USER_CONTEXT_MAP.get(receiveId);
+        if (null==receiveChannel){
+            return;
+        }
+        // A给B发消息，对于消息接收者B来说，这条消息的发送者A就是联系人
+        messageSendDTO.setContactId(messageSendDTO.getSendUserId());
+        messageSendDTO.setContactName(messageSendDTO.getSendUserNickName());
+        receiveChannel.writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(messageSendDTO)));
+    }
+    /**
+     * 向群组发送群聊消息
+     * @param messageSendDTO
+     */
+    public void send2Group(MessageSendDTO messageSendDTO){
+        String groupId = messageSendDTO.getContactId();
+        if (StringUtils.isEmpty(groupId)){
+            return;
+        }
+        ChannelGroup channelGroup = GROUP_CONTEXT_MAP.get(groupId);
+        if (null==channelGroup){
+            return;
+        }
+        channelGroup.writeAndFlush(JSON.toJSON(messageSendDTO));
+    }
+
+    /**
+     * 关闭用户连接
+     * @param userId
+     */
+    public void closeContext(String userId){
+        if (StringUtils.isEmpty(userId)){
+            return;
+        }
+        // 清除用户token信息
+        redisService.cleanTokenUserInfoDTOAndTokenByUserId(userId);
+        Channel channel = USER_CONTEXT_MAP.get(userId);
+        if (null==channel){
+            return;
+        }
+        channel.close();
+    }
+
 }
