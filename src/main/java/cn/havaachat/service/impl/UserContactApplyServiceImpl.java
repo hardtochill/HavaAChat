@@ -9,6 +9,7 @@ import cn.havaachat.mapper.UserContactApplyMapper;
 import cn.havaachat.mapper.UserContactMapper;
 import cn.havaachat.mapper.UserInfoMapper;
 import cn.havaachat.pojo.dto.ContactApplyAddDTO;
+import cn.havaachat.pojo.dto.MessageSendDTO;
 import cn.havaachat.pojo.dto.PageDTO;
 import cn.havaachat.pojo.dto.TokenUserInfoDTO;
 import cn.havaachat.pojo.entity.GroupInfo;
@@ -19,6 +20,7 @@ import cn.havaachat.pojo.vo.PageResultVO;
 import cn.havaachat.service.UserContactApplyService;
 import cn.havaachat.service.UserContactService;
 import cn.havaachat.utils.StringUtils;
+import cn.havaachat.websocket.MessageHandler;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -36,13 +38,15 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
     private UserInfoMapper userInfoMapper;
     private GroupInfoMapper groupInfoMapper;
     private UserContactService userContactService;
+    private MessageHandler messageHandler;
     public UserContactApplyServiceImpl(UserContactApplyMapper userContactApplyMapper,UserContactMapper userContactMapper,UserInfoMapper userInfoMapper
-            ,GroupInfoMapper groupInfoMapper,UserContactService userContactService){
+            ,GroupInfoMapper groupInfoMapper,UserContactService userContactService,MessageHandler messageHandler){
         this.userContactApplyMapper = userContactApplyMapper;
         this.userContactMapper = userContactMapper;
         this.userInfoMapper=userInfoMapper;
         this.groupInfoMapper = groupInfoMapper;
         this.userContactService = userContactService;
+        this.messageHandler = messageHandler;
     }
     /**
      * 申请添加联系人
@@ -116,7 +120,7 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
         // 如果joinType是申请后才能加，则需要存储申请记录
         UserContactApply  existUserContactApply = userContactApplyMapper.findByApplyUserIdAndReceiveUserIdAndContactId(applyUserId,receiveUserId, contactApplyAddDTO.getContactId());
         Long now = System.currentTimeMillis();
-        // 是否为初次添加
+        // 是否为初次申请
         if(null==existUserContactApply){
             UserContactApply userContactApply = new UserContactApply();
             userContactApply.setApplyUserId(applyUserId);
@@ -135,9 +139,13 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
             userContactApply.setLastApplyTime(now);
             userContactApplyMapper.update(userContactApply);
         }
-        // 给被申请用户发送ws信息
+        // 给被申请用户发送ws信息，只有当初次申请 或者 被拒绝或拉黑后再次申请，才向被申请者发送ws消息。如果是已申请但未处理，再次申请时就不再发送ws消息
         if(null==existUserContactApply || !UserContactApplyStatusEnum.INIT.getStatus().equals(existUserContactApply.getStatus())){
-            // todo 发送ws消息
+            MessageSendDTO messageSendDTO = new MessageSendDTO();
+            messageSendDTO.setMessageType(MessageTypeEnum.CONTACT_APPLY.getType());
+            messageSendDTO.setMessageContent(applyInfo);
+            messageSendDTO.setContactId(receiveUserId);
+            messageHandler.sendMessage(messageSendDTO);
         }
         return joinType;
     }

@@ -67,6 +67,23 @@ public class RedisServiceImpl implements RedisService{
     }
 
     /**
+     * 清除用户在redis中存储的token信息
+     * @param userId
+     */
+    @Override
+    public void cleanTokenUserInfoDTOAndTokenByUserId(String userId) {
+        // 先根据userId取出token
+        String token = (String)redisUtils.get(StringUtils.getRedisTokenUserIdKey(userId));
+        if (StringUtils.isEmpty(token)){
+            return;
+        }
+        // 再根据token删除tokenUserInfo
+        redisUtils.del(StringUtils.getRedisTokenUserInfoKey(token));
+        // 再删除token
+        redisUtils.del(StringUtils.getRedisTokenUserIdKey(userId));
+    }
+
+    /**
      * 获取用户token
      * @param token
      */

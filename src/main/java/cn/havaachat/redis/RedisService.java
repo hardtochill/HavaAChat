@@ -40,6 +40,12 @@ public interface RedisService {
      * @param token
      */
     TokenUserInfoDTO getTokenUserInfoDTO(String token);
+
+    /**
+     * 根据userId清除用户在redis中的token信息
+     * @param userId
+     */
+    void cleanTokenUserInfoDTOAndTokenByUserId(String userId);
     /**
      * 获取系统设置
      * @return
@@ -68,4 +74,6 @@ public interface RedisService {
      * @param userId
      */
     List<String> getUserContactIdList(String userId);
+
+
 }
