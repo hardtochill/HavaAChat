@@ -24,4 +24,11 @@ public interface ChatSessionMapper {
     @AutoFill(OperationTypeEnum.INSERT)
     @Insert("insert into chat_session values (#{sessionId},#{lastMessage},#{lastReceiveTime},#{createTime},#{updateTime})")
     void insert(ChatSession chatSession);
+
+    /**
+     * 更改
+     * @param chatSession
+     */
+    @AutoFill(OperationTypeEnum.UPDATE)
+    void update(ChatSession chatSession);
 }

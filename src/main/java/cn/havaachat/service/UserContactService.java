@@ -24,7 +24,7 @@ public interface UserContactService {
      * @param contactId
      * @param contactType
      */
-    void addContact(String applyUserId,String receiveUserId,String contactId,Integer contactType);
+    void addContact(String applyUserId,String receiveUserId,String contactId,Integer contactType,String applyInfo);
 
     /**
      * 为新注册用户添加机器人好友

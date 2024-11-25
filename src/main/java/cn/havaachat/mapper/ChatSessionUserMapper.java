@@ -5,6 +5,7 @@ import cn.havaachat.enums.OperationTypeEnum;
 import cn.havaachat.pojo.entity.ChatSessionUser;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -28,4 +29,18 @@ public interface ChatSessionUserMapper {
     @AutoFill(OperationTypeEnum.INSERT)
     @Insert("insert into chat_session_user values (#{userId},#{contactId},#{sessionId},#{contactName},#{createTime},#{updateTime})")
     void insert(ChatSessionUser chatSessionUser);
+
+    /**
+     * 批量插入
+     * @param chatSessionUserList
+     */
+    @AutoFill(OperationTypeEnum.INSERT)
+    void insertBatch(@Param("chatSessionUserList") List<ChatSessionUser> chatSessionUserList);
+
+    /**
+     * 批量修改
+     * @param chatSessionUserList
+     */
+    @AutoFill(OperationTypeEnum.UPDATE)
+    void updateBatch(@Param("chatSessionUserList") List<ChatSessionUser> chatSessionUserList);
 }

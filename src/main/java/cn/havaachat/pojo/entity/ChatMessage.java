@@ -60,7 +60,8 @@ public class ChatMessage extends BaseEntity{
      */
     private Integer fileType;
     /**
-     * 消息状态 0：正在发送，1：已发送
+     * 消息状态 0：发送中，1：已发送
+     * 对于文件消息，使用异步上传，通过消息状态处理
      */
     private Integer status;
 }

@@ -8,15 +8,13 @@ import cn.havaachat.mapper.GroupInfoMapper;
 import cn.havaachat.mapper.UserContactApplyMapper;
 import cn.havaachat.mapper.UserContactMapper;
 import cn.havaachat.mapper.UserInfoMapper;
-import cn.havaachat.pojo.dto.ContactApplyAddDTO;
-import cn.havaachat.pojo.dto.MessageSendDTO;
-import cn.havaachat.pojo.dto.PageDTO;
-import cn.havaachat.pojo.dto.TokenUserInfoDTO;
+import cn.havaachat.pojo.dto.*;
 import cn.havaachat.pojo.entity.GroupInfo;
 import cn.havaachat.pojo.entity.UserContact;
 import cn.havaachat.pojo.entity.UserContactApply;
 import cn.havaachat.pojo.entity.UserInfo;
 import cn.havaachat.pojo.vo.PageResultVO;
+import cn.havaachat.redis.RedisService;
 import cn.havaachat.service.UserContactApplyService;
 import cn.havaachat.service.UserContactService;
 import cn.havaachat.utils.StringUtils;
@@ -29,6 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -114,7 +114,7 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
         }
         // 如果joinType是直接添加，则不用存储申请记录
         if(JoinTypeEnum.JOIN.getType().equals(joinType)){
-            userContactService.addContact(applyUserId,receiveUserId,contactApplyAddDTO.getContactId(),userContactTypeEnum.getType());
+            userContactService.addContact(applyUserId,receiveUserId,contactApplyAddDTO.getContactId(),userContactTypeEnum.getType(),applyInfo);
             return joinType;
         }
         // 如果joinType是申请后才能加，则需要存储申请记录
@@ -191,7 +191,7 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
 
         // 1.同意添加
         if(UserContactApplyStatusEnum.PASS.equals(userContactApplyStatusEnum)){
-            userContactService.addContact(userContactApply.getApplyUserId(),userContactApply.getReceiveUserId(),userContactApply.getContactId(),userContactApply.getContactType());
+            userContactService.addContact(userContactApply.getApplyUserId(),userContactApply.getReceiveUserId(),userContactApply.getContactId(),userContactApply.getContactType(),userContactApply.getApplyInfo());
             return;
         }
 

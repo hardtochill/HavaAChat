@@ -148,8 +148,9 @@ public class AccountServiceImpl implements AccountService {
         userInfo.setStatus(UserStatusEnum.ENABLE.getStatus());
         // 审核好友类型
         userInfo.setJoinType(JoinTypeEnum.APPLY.getType());
+        Long now = System.currentTimeMillis();
         // 设置最后离线时间
-        userInfo.setLastOffTime(System.currentTimeMillis());
+        userInfo.setLastOffTime(now);
         // 是否为该用户分配靓号id
         UserInfoBeauty existUserInfoBeauty = userInfoBeautyMapper.findByEmail(email);
         if(null!=existUserInfoBeauty&& BeautyAccountStatusEnum.NO_USE.getStatus().equals(existUserInfoBeauty.getStatus())){

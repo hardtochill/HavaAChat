@@ -2,5 +2,15 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="cn.havaachat.mapper.ChatSessionMapper">
-
+    <!--更改-->
+    <update id="update">
+        update chat_session
+        <set>
+            <if test="lastMessage!=null">last_message=#{lastMessage},</if>
+            <if test="lastReceiveTime!=null">last_receive_time=#{lastReceiveTime},</if>
+            <if test="createTime!=null">create_time=#{createTime},</if>
+            <if test="updateTime!=null">update_time=#{updateTime}</if>
+        </set>
+        where session_id=#{sessionId}
+    </update>
 </mapper>

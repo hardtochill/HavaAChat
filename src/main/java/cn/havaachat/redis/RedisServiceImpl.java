@@ -126,7 +126,21 @@ public class RedisServiceImpl implements RedisService{
     @Override
     public void saveUserContactIdList(String userId, List<String> userContactIdList) {
         String redisUserContactKey = StringUtils.getRedisUserContactKey(userId);
-        redisUtils.lSet(redisUserContactKey,userContactIdList,RedisConstants.REDIS_KEY_EXPIRES_TOKEN);
+        redisUtils.lSetAll(redisUserContactKey,userContactIdList,RedisConstants.REDIS_KEY_EXPIRES_TOKEN);
+    }
+
+    /**
+     * 添加单个用户联系人
+     * @param userId
+     * @param userContactId
+     */
+    @Override
+    public void saveUserContactId(String userId, String userContactId) {
+        List<String> userContactIdList = getUserContactIdList(userId);
+        if (userContactIdList.contains(userContactId)){
+            return;
+        }
+        redisUtils.lSet(StringUtils.getRedisUserContactKey(userId),userContactId,RedisConstants.REDIS_KEY_EXPIRES_TOKEN);
     }
 
     /**
@@ -137,12 +151,8 @@ public class RedisServiceImpl implements RedisService{
     @Override
     public List<String> getUserContactIdList(String userId) {
         List<Object> objectList = redisUtils.lGet(StringUtils.getRedisUserContactKey(userId), 0, -1);
-        List<String> resultList = new ArrayList<>();
-        for (Object o : objectList) {
-            List<String> oL = (List<String>)o;
-            resultList.add(String.join("",oL));
-        }
-        return resultList;
+        return objectList.stream().map(String::valueOf).collect(Collectors.toList());
     }
 }
+
 

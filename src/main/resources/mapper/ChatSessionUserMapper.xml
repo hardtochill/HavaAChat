@@ -12,4 +12,25 @@
         where csu.user_id = #{userId}
         order by cs.last_receive_time desc
     </select>
+    <!--批量插入-->
+    <insert id="insertBatch">
+        insert into chat_session_user
+        value
+        <foreach collection="chatSessionUserList" item="item" separator=",">
+            (#{item.userId},#{item.contactId},#{item.sessionId},#{item.contactName},#{item.createTime},#{item.updateTime})
+        </foreach>
+    </insert>
+    <!--批量修改-->
+    <update id="updateBatch">
+        <foreach collection="chatSessionUserList" item="item" separator=";">
+            update chat_session_user
+            <set>
+                <if test="item.sessionId!=null">session_id=#{item.sessionId},</if>
+                <if test="item.contactName!=null">contact_name=#{item.contactName},</if>
+                <if test="item.createTime!=null">create_time=#{item.createTime},</if>
+                <if test="item.updateTime!=null">update_time=#{item.updateTime},</if>
+            </set>
+            where user_id=#{item.userId} and contactId=#{item.contactId}
+        </foreach>
+    </update>
 </mapper>

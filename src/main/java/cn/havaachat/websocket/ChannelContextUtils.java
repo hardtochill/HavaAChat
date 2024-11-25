@@ -66,6 +66,7 @@ public class ChannelContextUtils {
      * @param channel
      */
     public void addContext(String userId, Channel channel){
+        log.info("netty：为新连接添加上下文，userId={}",userId);
         // 将channel绑定当前连接的userId
         String channelId = channel.id().toString();
         AttributeKey attributeKey = null;
@@ -166,7 +167,7 @@ public class ChannelContextUtils {
         // 将其channel从全局缓存中移除
         USER_CONTEXT_MAP.remove(userId);
         // 将用户心跳从redis中移除
-        redisService.saveUserHeartBeat(userId);
+        redisService.removeUserHeartBeat(userId);
         // 更新用户最后离线时间
         UserInfo userInfoForUpdate = new UserInfo();
         userInfoForUpdate.setUserId(userId);
@@ -229,8 +230,17 @@ public class ChannelContextUtils {
             return;
         }
         // A给B发消息，对于消息接收者B来说，这条消息的发送者A就是联系人
-        messageSendDTO.setContactId(messageSendDTO.getSendUserId());
-        messageSendDTO.setContactName(messageSendDTO.getSendUserNickName());
+        // 特殊情况处理：申请者发送的好友申请被通过后，服务端需要向申请者发送一条ws消息，这条消息虽然是服务器发给申请者的，但是对申请者来说就是接受者发给申请者的
+        if(MessageTypeEnum.ADD_FRIEND_SELF.getType().equals(messageSendDTO.getMessageType())){
+            UserInfo receiveUserInfo = (UserInfo) messageSendDTO.getExtendData();
+            messageSendDTO.setMessageType(MessageTypeEnum.ADD_FRIEND.getType());
+            messageSendDTO.setContactId(receiveUserInfo.getUserId());
+            messageSendDTO.setContactName(receiveUserInfo.getNickName());
+            messageSendDTO.setExtendData(null);
+        }else{
+            messageSendDTO.setContactId(messageSendDTO.getSendUserId());
+            messageSendDTO.setContactName(messageSendDTO.getSendUserNickName());
+        }
         receiveChannel.writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(messageSendDTO)));
     }
     /**

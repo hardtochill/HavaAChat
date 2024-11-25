@@ -4,8 +4,8 @@
 <mapper namespace="cn.havaachat.mapper.UserInfoMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="userId">
-        insert into user_info(user_id,email,nick_name,join_type,sex,password,personal_signature,status,create_time,update_time,area_name,area_code)
-        values(#{userId},#{email},#{nickName},#{joinType},#{sex},#{password},#{personalSignature},#{status},#{createTime},#{updateTime},#{areaName},#{areaCode})
+        insert into user_info(user_id,email,nick_name,join_type,sex,password,personal_signature,status,create_time,update_time,area_name,area_code,last_login_time,last_off_time)
+        values(#{userId},#{email},#{nickName},#{joinType},#{sex},#{password},#{personalSignature},#{status},#{createTime},#{updateTime},#{areaName},#{areaCode},#{lastLoginTime},#{lastOffTime})
     </insert>
     <update id="update">
         update user_info

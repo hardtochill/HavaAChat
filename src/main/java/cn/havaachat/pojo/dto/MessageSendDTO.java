@@ -23,6 +23,14 @@ public class MessageSendDTO<T> {
      */
     private String sessionId;
     /**
+     * 消息类型
+     */
+    private Integer messageType;
+    /**
+     * 消息内容
+     */
+    private String messageContent;
+    /**
      * 发送人id
      */
     private String sendUserId;
@@ -31,42 +39,17 @@ public class MessageSendDTO<T> {
      */
     private String sendUserNickName;
     /**
-     * 联系人id
-     */
-    private String contactId;
-    /**
-     * 联系人名称
-     */
-    private String contactName;
-    /**
-     * 消息内容
-     */
-    private String messageContent;
-    /**
-     * 最后一条消息
-     */
-    private String lastMessage;
-    /**
-     * 消息类型
-     */
-    private Integer messageType;
-    /**
      * 消息发送时间
      */
     private Long sendTime;
     /**
+     * 联系人id
+     */
+    private String contactId;
+    /**
      * 联系人类型 0：用户，1：群聊
      */
     private Integer contactType;
-    /**
-     * 拓展消息
-     */
-    private T extendData;
-    /**
-     * 消息状态 0：发送中，1：已发送
-     * 对于文件消息，使用异步上传，通过消息状态处理
-     */
-    private Integer status;
     /**
      * 文件大小
      */
@@ -80,9 +63,26 @@ public class MessageSendDTO<T> {
      */
     private Integer fileType;
     /**
+     * 消息状态 0：发送中，1：已发送
+     * 对于文件消息，使用异步上传，通过消息状态处理
+     */
+    private Integer status;
+    /**
      * 群人数
      */
     private Integer memberCount;
+    /**
+     * 联系人名称
+     */
+    private String contactName;
+    /**
+     * 最后一条消息
+     */
+    private String lastMessage;
+    /**
+     * 拓展消息
+     */
+    private T extendData;
 
     public String getLastMessage(){
         return StringUtils.isEmpty(lastMessage)?messageContent:lastMessage;

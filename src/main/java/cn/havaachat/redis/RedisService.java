@@ -69,6 +69,13 @@ public interface RedisService {
      * @param userContactIdList
      */
     void saveUserContactIdList(String userId, List<String> userContactIdList);
+
+    /**
+     * 添加单个用户联系人
+     * @param userId
+     * @param userContactId
+     */
+    void saveUserContactId(String userId,String userContactId);
     /**
      * 获取用户联系人列表
      * @param userId

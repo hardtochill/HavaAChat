@@ -168,13 +168,22 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
     }
 
     /**
-     * 为聊天双方生成唯一且不变的sessionId
+     * 为用户聊天双方生成唯一且不变的sessionId
      * @param userIdArray
      * @return
      */
-    public static final String getChatSessionId(String[] userIdArray){
+    public static final String getChatSessionIdForUser(String[] userIdArray){
         // 将会话双方的id进行处理：排序+相连+md5
         Arrays.sort(userIdArray);
         return transferStringToMd5(join(userIdArray,""));
+    }
+
+    /**
+     * 为群聊生成唯一且不变的sessionId
+     * @param groupId
+     * @return
+     */
+    public static final String getChatSessionIdForGroup(String groupId){
+        return transferStringToMd5(groupId);
     }
 }
