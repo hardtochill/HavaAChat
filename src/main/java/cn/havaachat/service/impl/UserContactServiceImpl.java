@@ -13,6 +13,7 @@ import cn.havaachat.pojo.vo.UserInfoVO;
 import cn.havaachat.redis.RedisService;
 import cn.havaachat.service.UserContactService;
 import cn.havaachat.utils.StringUtils;
+import cn.havaachat.websocket.ChannelContextUtils;
 import cn.havaachat.websocket.MessageHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
@@ -35,10 +36,11 @@ public class UserContactServiceImpl implements UserContactService {
     private ChatSessionUserMapper chatSessionUserMapper;
     private ChatMessageMapper chatMessageMapper;
     private MessageHandler messageHandler;
+    private ChannelContextUtils channelContextUtils;
     @Autowired
     public UserContactServiceImpl(UserContactMapper userContactMapper,UserInfoMapper userInfoMapper,GroupInfoMapper groupInfoMapper,
                                   RedisService redisService,ChatSessionMapper chatSessionMapper,ChatSessionUserMapper chatSessionUserMapper,
-                                  ChatMessageMapper chatMessageMapper,MessageHandler messageHandler){
+                                  ChatMessageMapper chatMessageMapper,MessageHandler messageHandler,ChannelContextUtils channelContextUtils){
         this.userContactMapper = userContactMapper;
         this.userInfoMapper = userInfoMapper;
         this.groupInfoMapper = groupInfoMapper;
@@ -47,6 +49,7 @@ public class UserContactServiceImpl implements UserContactService {
         this.chatSessionUserMapper = chatSessionUserMapper;
         this.chatMessageMapper = chatMessageMapper;
         this.messageHandler = messageHandler;
+        this.channelContextUtils = channelContextUtils;
     }
     /**
      * 搜索联系人
@@ -126,7 +129,7 @@ public class UserContactServiceImpl implements UserContactService {
             userContactList.add(receiveUserContact);
         }
         // 在申请添加部分对拉黑状态做了拦截，走到这的逻辑只有：非好友 or 已删除后再添加
-        UserContact existContact = userContactMapper.findByUserIdAndContactId(applyUserId, receiveUserId);
+        UserContact existContact = userContactMapper.findByUserIdAndContactId(applyUserId, contactId);
         if(null==existContact){// 非好友
             userContactMapper.insertBatch(userContactList);
         }else{// 已删除后再添加
@@ -160,6 +163,7 @@ public class UserContactServiceImpl implements UserContactService {
             }else{
                 chatSessionMapper.update(chatSession);
             }
+
             // 保存双方ChatSessionUser信息
             // 申请方
             ChatSessionUser applyChatSessionUser = new ChatSessionUser();
@@ -183,6 +187,7 @@ public class UserContactServiceImpl implements UserContactService {
             }else{
                 chatSessionUserMapper.updateBatch(chatSessionUserList);
             }
+
             // 保存ChatMessage信息
             ChatMessage chatMessage = new ChatMessage();
             chatMessage.setSessionId(sessionId);
@@ -195,18 +200,71 @@ public class UserContactServiceImpl implements UserContactService {
             chatMessage.setContactType(UserContactTypeEnum.USER.getType());
             chatMessage.setStatus(MessageStatusEnum.SENDED.getStatus());
             chatMessageMapper.insert(chatMessage);
+
             // 发送ws消息
             // 向接收者发送ws消息，此时ws消息发送人是申请者，ws消息接收人是接受者
             MessageSendDTO messageSendDTO = new MessageSendDTO();
             BeanUtils.copyProperties(chatMessage,messageSendDTO);
             messageHandler.sendMessage(messageSendDTO);
-            // 向申请者自己发送ws消息，此时ws消息发送人是接受者，ws消息接收人是申请者
+            // 向申请者自己发送ws消息，这条消息的发送者是申请者自己，即自己给自己发消息，但是联系人是接受者
             messageSendDTO.setMessageType(MessageTypeEnum.ADD_FRIEND_SELF.getType());
             messageSendDTO.setContactId(applyUserId);
             messageSendDTO.setExtendData(receiveUserInfo);
             messageHandler.sendMessage(messageSendDTO);
         }else{ // 添加群聊
+            // 要发给申请者的消息
+            UserInfo applyUserInfo = userInfoMapper.findById(applyUserId);
+            String sendMessage = String.format(MessageTypeEnum.ADD_GROUP.getInitMessage(),applyUserInfo.getNickName());
 
+            // 创建ChatSession信息
+            ChatSession chatSession = new ChatSession();
+            chatSession.setSessionId(sessionId);
+            chatSession.setLastMessage(sendMessage);
+            chatSession.setLastReceiveTime(now);
+            ChatSession existChatSession = chatSessionMapper.findBySessionId(sessionId);
+            if (existChatSession==null){
+                chatSessionMapper.insert(chatSession);
+            }else{
+                chatSessionMapper.update(chatSession);
+            }
+
+            // 为申请者创建ChatSessionUser
+            ChatSessionUser chatSessionUser = new ChatSessionUser();
+            chatSessionUser.setUserId(applyUserId);
+            chatSessionUser.setContactId(contactId);
+            GroupInfo groupInfo = groupInfoMapper.findById(contactId);
+            chatSessionUser.setContactName(groupInfo.getGroupName());
+            chatSessionUser.setSessionId(sessionId);
+            ChatSessionUser existChatSessionUser = chatSessionUserMapper.findByUserIdAndContactId(applyUserId, contactId);
+            if (existChatSessionUser==null){
+                chatSessionUserMapper.insert(chatSessionUser);
+            }else{
+                chatSessionUserMapper.update(chatSessionUser);
+            }
+
+            // 保存ChatMessage消息
+            ChatMessage chatMessage = new ChatMessage();
+            chatMessage.setSessionId(sessionId);
+            chatMessage.setMessageType(MessageTypeEnum.ADD_GROUP.getType());
+            chatMessage.setMessageContent(sendMessage);
+            chatMessage.setSendTime(now);
+            chatMessage.setContactId(contactId);
+            chatMessage.setContactType(UserContactTypeEnum.GROUP.getType());
+            chatMessage.setStatus(MessageStatusEnum.SENDED.getStatus());
+            chatMessageMapper.insert(chatMessage);
+
+            // 将申请者添加到群聊通道中
+            channelContextUtils.addUser2Group(applyUserId, groupInfo.getGroupId());
+
+            // 发送ws消息
+            MessageSendDTO messageSendDTO = new MessageSendDTO();
+            BeanUtils.copyProperties(chatMessage,messageSendDTO);
+            messageSendDTO.setContactType(UserContactTypeEnum.GROUP.getType());
+            messageSendDTO.setContactName(groupInfo.getGroupName());
+            // 查询群成员数量
+            Integer memberCount = userContactMapper.countByContactIdAndStatus(groupInfo.getGroupId(), UserContactStatusEnum.FRIEND.getStatus());
+            messageSendDTO.setMemberCount(memberCount);
+            messageHandler.sendMessage(messageSendDTO);
         }
     }
 

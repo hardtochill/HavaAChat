@@ -230,7 +230,7 @@ public class ChannelContextUtils {
             return;
         }
         // A给B发消息，对于消息接收者B来说，这条消息的发送者A就是联系人
-        // 特殊情况处理：申请者发送的好友申请被通过后，服务端需要向申请者发送一条ws消息，这条消息虽然是服务器发给申请者的，但是对申请者来说就是接受者发给申请者的
+        // 特殊情况处理：申请者发送的好友申请被通过后，服务端需要向申请者发送一条ws消息，此时这条消息的发送者是申请者自己，但是联系人是接受者
         if(MessageTypeEnum.ADD_FRIEND_SELF.getType().equals(messageSendDTO.getMessageType())){
             UserInfo receiveUserInfo = (UserInfo) messageSendDTO.getExtendData();
             messageSendDTO.setMessageType(MessageTypeEnum.ADD_FRIEND.getType());

@@ -30,7 +30,18 @@
                 <if test="item.createTime!=null">create_time=#{item.createTime},</if>
                 <if test="item.updateTime!=null">update_time=#{item.updateTime},</if>
             </set>
-            where user_id=#{item.userId} and contactId=#{item.contactId}
+            where user_id=#{item.userId} and contact_id=#{item.contactId}
         </foreach>
+    </update>
+    <!--修改-->
+    <update id="update">
+        update chat_session_user
+        <set>
+            <if test="sessionId!=null">session_id=#{sessionId},</if>
+            <if test="contactName!=null">contact_name=#{contactName},</if>
+            <if test="createTime!=null">create_time=#{createTime},</if>
+            <if test="updateTime!=null">update_time=#{updateTime},</if>
+        </set>
+        where user_id=#{userId} and contact_id=#{contactId}
     </update>
 </mapper>

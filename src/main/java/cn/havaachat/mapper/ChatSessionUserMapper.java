@@ -31,6 +31,13 @@ public interface ChatSessionUserMapper {
     void insert(ChatSessionUser chatSessionUser);
 
     /**
+     * 修改
+     * @param chatSessionUser
+     */
+    @AutoFill(OperationTypeEnum.UPDATE)
+    void update(ChatSessionUser chatSessionUser);
+
+    /**
      * 批量插入
      * @param chatSessionUserList
      */
