@@ -256,7 +256,7 @@ public class ChannelContextUtils {
         if (null==channelGroup){
             return;
         }
-        channelGroup.writeAndFlush(JSON.toJSON(messageSendDTO));
+        channelGroup.writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(messageSendDTO)));
     }
 
     /**

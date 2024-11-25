@@ -148,7 +148,7 @@ public class UserContactServiceImpl implements UserContactService {
         }
         Long now = System.currentTimeMillis();
         List<ChatSessionUser> chatSessionUserList = new ArrayList<>();
-        if (addUser){
+        if (addUser){ // 添加好友
             // 保存ChatSession信息
             ChatSession chatSession = new ChatSession();
             chatSession.setSessionId(sessionId);
@@ -205,6 +205,8 @@ public class UserContactServiceImpl implements UserContactService {
             messageSendDTO.setContactId(applyUserId);
             messageSendDTO.setExtendData(receiveUserInfo);
             messageHandler.sendMessage(messageSendDTO);
+        }else{ // 添加群聊
+
         }
     }
 
@@ -221,6 +223,14 @@ public class UserContactServiceImpl implements UserContactService {
         String contactName = sysSettingDTO.getRobotNickName();
         String sendMessage = sysSettingDTO.getRobotWelcome();
         StringUtils.cleanHtmlTag(sendMessage);
+        // 判断机器人是否创建
+        UserInfo robotUserInfo = new UserInfo();
+        robotUserInfo.setUserId(sysSettingDTO.getRobotUid());
+        robotUserInfo.setNickName(sysSettingDTO.getRobotNickName());
+        robotUserInfo.setStatus(UserStatusEnum.ENABLE.getStatus());
+        if (userInfoMapper.findById(robotUserInfo.getUserId())==null){
+            userInfoMapper.insert(robotUserInfo);
+        }
         // 添加机器人好友
         UserContact userContactForInsert = new UserContact();
         userContactForInsert.setUserId(userId);
