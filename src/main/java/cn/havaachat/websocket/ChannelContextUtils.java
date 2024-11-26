@@ -220,6 +220,10 @@ public class ChannelContextUtils {
     }
     /**
      * 发送消息
+     * 对于消息方向的确定：
+     * （1）后端通过receiveId拿到对应的Channel，确定要发给哪个客户端，并将messageSendDTO发送给该客户端
+     * （2）前端收到messageSendDTO后，通过messageSendDTO的contactId确定当前聊天界面的联系人是谁，即在跟谁聊天
+     * （3）前端通过messageSendDTO的sendUserId确定消息的发送者是谁
      * @param messageSendDTO
      * @param receiveId
      */
@@ -230,7 +234,9 @@ public class ChannelContextUtils {
             return;
         }
         // A给B发消息，对于消息接收者B来说，这条消息的发送者A就是联系人
-        // 特殊情况处理：申请者发送的好友申请被通过后，服务端需要向申请者发送一条ws消息，此时这条消息的发送者是申请者自己，但是联系人是接受者
+        /* 特殊情况处理：申请者发送的好友申请被通过后，服务端需要向申请者发送一条ws消息，此时这条消息的发送者是申请者自己，但是联系人是接受者
+            类似于A向B发送好友申请，B通过后，A与B的聊天界面上双方都能看到“我是A”
+         */
         if(MessageTypeEnum.ADD_FRIEND_SELF.getType().equals(messageSendDTO.getMessageType())){
             UserInfo receiveUserInfo = (UserInfo) messageSendDTO.getExtendData();
             messageSendDTO.setMessageType(MessageTypeEnum.ADD_FRIEND.getType());

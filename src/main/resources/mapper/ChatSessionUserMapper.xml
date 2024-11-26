@@ -44,4 +44,14 @@
         </set>
         where user_id=#{userId} and contact_id=#{contactId}
     </update>
+    <update id="updateByContactId">
+        update chat_session_user
+        <set>
+            <if test="sessionId!=null">session_id=#{sessionId},</if>
+            <if test="contactName!=null">contact_name=#{contactName},</if>
+            <if test="createTime!=null">create_time=#{createTime},</if>
+            <if test="updateTime!=null">update_time=#{updateTime},</if>
+        </set>
+        where contact_id=#{contactId}
+    </update>
 </mapper>

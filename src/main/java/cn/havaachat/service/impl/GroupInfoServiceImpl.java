@@ -136,8 +136,22 @@ public class GroupInfoServiceImpl implements GroupInfoService {
                 throw new BaseException(ResponseCodeEnum.CODE_600);
             }
             groupInfoMapper.update(groupInfo);
-            // todo 更新相关表冗余信息
-            // todo 修改群昵称，发送ws消息
+
+            // 更新会话表冗余信息
+            // 查看群名称是否修改
+            if (!originGroupInfo.getGroupName().equals(groupInfo.getGroupName())){
+                ChatSessionUser chatSessionUserForUpdate = new ChatSessionUser();
+                chatSessionUserForUpdate.setContactId(groupInfo.getGroupId());
+                chatSessionUserForUpdate.setContactName(groupInfo.getGroupName());
+                chatSessionUserMapper.updateByContactId(chatSessionUserForUpdate);
+                // 发送ws消息
+                MessageSendDTO messageSendDTO = new MessageSendDTO();
+                messageSendDTO.setContactId(groupInfo.getGroupId());
+                messageSendDTO.setContactType(UserContactTypeEnum.GROUP.getType());
+                messageSendDTO.setMessageType(MessageTypeEnum.CONTACT_NAME_UPDATE.getType());
+                messageSendDTO.setExtendData(groupInfo.getGroupName());
+                messageHandler.sendMessage(messageSendDTO);
+            }
         }
         if(null == saveGroupDTO.getAvatarFile()){
             return;

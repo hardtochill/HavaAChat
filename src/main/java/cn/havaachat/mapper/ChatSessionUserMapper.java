@@ -36,6 +36,12 @@ public interface ChatSessionUserMapper {
      */
     @AutoFill(OperationTypeEnum.UPDATE)
     void update(ChatSessionUser chatSessionUser);
+    /**
+     * 根据contactId修改
+     * @param chatSessionUser
+     */
+    @AutoFill(OperationTypeEnum.UPDATE)
+    void updateByContactId(ChatSessionUser chatSessionUser);
 
     /**
      * 批量插入
