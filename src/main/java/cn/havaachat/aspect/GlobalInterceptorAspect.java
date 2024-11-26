@@ -77,7 +77,7 @@ public class GlobalInterceptorAspect {
             throw new BaseException(ResponseCodeEnum.CODE_901);
         }
         // 在redis中取出tokenUserInfo，进行权限校验
-        TokenUserInfoDTO tokenUserInfoDTO = (TokenUserInfoDTO)redisUtils.get(StringUtils.getRedisTokenUserInfoKey(token));
+        TokenUserInfoDTO tokenUserInfoDTO = (TokenUserInfoDTO)redisUtils.get(StringUtils.getRedisTokenUserInfoDTOKeyByToken(token));
         log.info("权限校验拦截，token：{}",tokenUserInfoDTO);
         // 未存储用户token信息
         if(null==tokenUserInfoDTO){

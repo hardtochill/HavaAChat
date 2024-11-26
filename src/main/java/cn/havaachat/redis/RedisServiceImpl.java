@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,7 +30,7 @@ public class RedisServiceImpl implements RedisService{
      */
     public Long getUserHeartBeat(String userId){
         log.info("获取用户心跳：userId={}",userId);
-        return (Long)redisUtils.get(StringUtils.getRedisWsUserHeartbeatKey(userId));
+        return (Long)redisUtils.get(StringUtils.getRedisWsUserHeartbeatKeyByUserId(userId));
     }
 
     /**
@@ -40,7 +39,7 @@ public class RedisServiceImpl implements RedisService{
      */
     public void saveUserHeartBeat(String userId){
         //log.info("存储用户心跳：userId={}",userId);
-        redisUtils.set(StringUtils.getRedisWsUserHeartbeatKey(userId),System.currentTimeMillis(),RedisConstants.REDIS_KEY_EXPIRES_HEART_BEAT);
+        redisUtils.set(StringUtils.getRedisWsUserHeartbeatKeyByUserId(userId),System.currentTimeMillis(),RedisConstants.REDIS_KEY_EXPIRES_HEART_BEAT);
     }
 
     /**
@@ -50,7 +49,7 @@ public class RedisServiceImpl implements RedisService{
     @Override
     public void removeUserHeartBeat(String userId) {
         log.info("移除用户心跳：userId={}",userId);
-        redisUtils.del(StringUtils.getRedisWsUserHeartbeatKey(userId));
+        redisUtils.del(StringUtils.getRedisWsUserHeartbeatKeyByUserId(userId));
     }
 
     /**
@@ -61,11 +60,19 @@ public class RedisServiceImpl implements RedisService{
     public void saveTokenUserInfoDTOAndToken(TokenUserInfoDTO tokenUserInfoDTO){
         log.info("将TokenUserInfoDTO和token存入redis：{}",tokenUserInfoDTO);
         // tokenUserInfoKey:tokenUserInfoDTO
-        redisUtils.set(StringUtils.getRedisTokenUserInfoKey(tokenUserInfoDTO.getToken()),tokenUserInfoDTO,RedisConstants.REDIS_KEY_EXPIRES_TOKEN);
+        redisUtils.set(StringUtils.getRedisTokenUserInfoDTOKeyByToken(tokenUserInfoDTO.getToken()),tokenUserInfoDTO,RedisConstants.REDIS_KEY_EXPIRES_TOKEN);
         // tokenUserIdKey:token
-        redisUtils.set(StringUtils.getRedisTokenUserIdKey(tokenUserInfoDTO.getUserId()),tokenUserInfoDTO.getToken(),RedisConstants.REDIS_KEY_EXPIRES_TOKEN);
+        redisUtils.set(StringUtils.getRedisTokenKeyByUserId(tokenUserInfoDTO.getUserId()),tokenUserInfoDTO.getToken(),RedisConstants.REDIS_KEY_EXPIRES_TOKEN);
     }
-
+    /**
+     * 将TokenUserInfoDTO存入redis
+     * @param tokenUserInfoDTO
+     */
+    public void saveTokenUserInfoDTO(TokenUserInfoDTO tokenUserInfoDTO){
+        log.info("将TokenUserInfoDTO存入redis：{}",tokenUserInfoDTO);
+        // tokenUserInfoKey:tokenUserInfoDTO
+        redisUtils.set(StringUtils.getRedisTokenUserInfoDTOKeyByToken(tokenUserInfoDTO.getToken()),tokenUserInfoDTO,RedisConstants.REDIS_KEY_EXPIRES_TOKEN);
+    }
     /**
      * 清除用户在redis中存储的token信息
      * @param userId
@@ -73,23 +80,34 @@ public class RedisServiceImpl implements RedisService{
     @Override
     public void cleanTokenUserInfoDTOAndTokenByUserId(String userId) {
         // 先根据userId取出token
-        String token = (String)redisUtils.get(StringUtils.getRedisTokenUserIdKey(userId));
+        String token = (String)redisUtils.get(StringUtils.getRedisTokenKeyByUserId(userId));
         if (StringUtils.isEmpty(token)){
             return;
         }
         // 再根据token删除tokenUserInfo
-        redisUtils.del(StringUtils.getRedisTokenUserInfoKey(token));
+        redisUtils.del(StringUtils.getRedisTokenUserInfoDTOKeyByToken(token));
         // 再删除token
-        redisUtils.del(StringUtils.getRedisTokenUserIdKey(userId));
+        redisUtils.del(StringUtils.getRedisTokenKeyByUserId(userId));
     }
 
     /**
-     * 获取用户token
+     * 获取用户token获取其tokenUserInfoDTO
      * @param token
      */
     @Override
-    public TokenUserInfoDTO getTokenUserInfoDTO(String token) {
-        return (TokenUserInfoDTO)redisUtils.get(StringUtils.getRedisTokenUserInfoKey(token));
+    public TokenUserInfoDTO getTokenUserInfoDTOByToken(String token) {
+        return (TokenUserInfoDTO) redisUtils.get(StringUtils.getRedisTokenUserInfoDTOKeyByToken(token));
+    }
+
+    /**
+     * 获取用户id获取其tokenUserInfoDTO
+     * @param userId
+     * @return
+     */
+    @Override
+    public TokenUserInfoDTO getTokenUserInfoDTOByUserId(String userId) {
+        String token = (String)redisUtils.get(StringUtils.getRedisTokenKeyByUserId(userId));
+        return getTokenUserInfoDTOByToken(token);
     }
 
     /**
@@ -115,7 +133,7 @@ public class RedisServiceImpl implements RedisService{
      */
     @Override
     public void cleanUserContact(String userId) {
-        redisUtils.del(StringUtils.getRedisUserContactKey(userId));
+        redisUtils.del(StringUtils.getRedisUserContactIdListKeyByUserId(userId));
     }
 
     /**
@@ -125,7 +143,7 @@ public class RedisServiceImpl implements RedisService{
      */
     @Override
     public void saveUserContactIdList(String userId, List<String> userContactIdList) {
-        String redisUserContactKey = StringUtils.getRedisUserContactKey(userId);
+        String redisUserContactKey = StringUtils.getRedisUserContactIdListKeyByUserId(userId);
         redisUtils.lSetAll(redisUserContactKey,userContactIdList,RedisConstants.REDIS_KEY_EXPIRES_TOKEN);
     }
 
@@ -140,7 +158,7 @@ public class RedisServiceImpl implements RedisService{
         if (userContactIdList.contains(userContactId)){
             return;
         }
-        redisUtils.lSet(StringUtils.getRedisUserContactKey(userId),userContactId,RedisConstants.REDIS_KEY_EXPIRES_TOKEN);
+        redisUtils.lSet(StringUtils.getRedisUserContactIdListKeyByUserId(userId),userContactId,RedisConstants.REDIS_KEY_EXPIRES_TOKEN);
     }
 
     /**
@@ -150,7 +168,7 @@ public class RedisServiceImpl implements RedisService{
      */
     @Override
     public List<String> getUserContactIdList(String userId) {
-        List<Object> objectList = redisUtils.lGet(StringUtils.getRedisUserContactKey(userId), 0, -1);
+        List<Object> objectList = redisUtils.lGet(StringUtils.getRedisUserContactIdListKeyByUserId(userId), 0, -1);
         return objectList.stream().map(String::valueOf).collect(Collectors.toList());
     }
 }

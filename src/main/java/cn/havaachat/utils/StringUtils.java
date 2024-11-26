@@ -74,7 +74,7 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
     }
 
     /**
-     * 返回验证码在redis中的key
+     * 返回redis中存储验证码的key
      * @param checkcode
      * @return
      */
@@ -84,29 +84,29 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
     }
 
     /**
-     * 返回TokenUserInfo在redis中存储的key
+     * 返回在redis中存储TokenUserInfoDTO的key
      * @param token
      * @return
      */
-    public static String getRedisTokenUserInfoKey(String token){
+    public static String getRedisTokenUserInfoDTOKeyByToken(String token){
         StringBuilder stringBuilder = new StringBuilder(RedisConstants.REDIS_KEY_WS_TOKEN_USERINFO);
         return stringBuilder.append(token).toString();
     }
     /**
-     * 返回UserId在redis中存储的key
+     * 返回在redis中存储token的key
      * @param userId
      * @return
      */
-    public static String getRedisTokenUserIdKey(String userId){
+    public static String getRedisTokenKeyByUserId(String userId){
         StringBuilder stringBuilder = new StringBuilder(RedisConstants.REDIS_KEY_WS_TOKEN_USERINFO_USERID);
         return stringBuilder.append(userId).toString();
     }
     /**
-     * 返回用户心跳在redis中的key
+     * 返回在redis中存储用户心跳的key
      * @param userId
      * @return
      */
-    public static String getRedisWsUserHeartbeatKey(String userId){
+    public static String getRedisWsUserHeartbeatKeyByUserId(String userId){
         StringBuilder stringBuilder = new StringBuilder(RedisConstants.REDIS_KEY_WS_USER_HEARTBEAT);
         return stringBuilder.append(userId).toString();
     }
@@ -143,11 +143,11 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
     }
 
     /**
-     * 获取用户在redis中存入的联系人id列表的key
+     * 获取redis中存储用户的联系人id列表的key
      * @param userId
      * @return
      */
-    public static String getRedisUserContactKey(String userId){
+    public static String getRedisUserContactIdListKeyByUserId(String userId){
         StringBuilder stringBuilder = new StringBuilder(RedisConstants.REDIS_KEY_USER_CONTACT);
         return stringBuilder.append(userId).toString();
     }
@@ -172,7 +172,7 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
      * @param userIdArray
      * @return
      */
-    public static final String getChatSessionIdForUser(String[] userIdArray){
+    public static String getChatSessionIdForUser(String[] userIdArray){
         // 将会话双方的id进行处理：排序+相连+md5
         Arrays.sort(userIdArray);
         return transferStringToMd5(join(userIdArray,""));
@@ -183,7 +183,7 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
      * @param groupId
      * @return
      */
-    public static final String getChatSessionIdForGroup(String groupId){
+    public static String getChatSessionIdForGroup(String groupId){
         return transferStringToMd5(groupId);
     }
 }

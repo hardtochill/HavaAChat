@@ -34,12 +34,24 @@ public interface RedisService {
      * @param tokenUserInfoDTO
      */
     void saveTokenUserInfoDTOAndToken(TokenUserInfoDTO tokenUserInfoDTO);
+    /**
+     * 将TokenUserInfoDTO存入redis
+     * @param tokenUserInfoDTO
+     */
+    void saveTokenUserInfoDTO(TokenUserInfoDTO tokenUserInfoDTO);
 
     /**
-     * 获取用户token
+     * 获取用户token获取其tokenUserInfoDTO
      * @param token
      */
-    TokenUserInfoDTO getTokenUserInfoDTO(String token);
+    TokenUserInfoDTO getTokenUserInfoDTOByToken(String token);
+
+    /**
+     * 根据用户id获取其tokenUserInfoDTO
+     * @param userId
+     * @return
+     */
+    TokenUserInfoDTO getTokenUserInfoDTOByUserId(String userId);
 
     /**
      * 根据userId清除用户在redis中的token信息

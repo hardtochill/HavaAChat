@@ -65,8 +65,18 @@ public interface UserContactMapper {
      * @param status
      * @return
      */
-    @Select("select * from user_contact where user_id=#{userId} and status=#{status};")
+    @Select("select * from user_contact where user_id=#{userId} and status=#{status}")
     List<UserContact> findBatchByUserIdAndStatus(String userId,Integer status);
+
+    /**
+     * 查询用户的联系人好友或群聊列表
+     * @param userId
+     * @param contactType
+     * @param status
+     * @return
+     */
+    @Select("select * from user_contact where user_id=#{userId} and contact_type=#{contactType} and status=#{status}")
+    List<UserContact> findBatchByUserIdAndContactTypeAndStatus(String userId,Integer contactType,Integer status);
     /**
      * 批量插入
      * @param userContactList

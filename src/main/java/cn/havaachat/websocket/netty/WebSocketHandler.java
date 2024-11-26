@@ -1,6 +1,5 @@
 package cn.havaachat.websocket.netty;
 
-import cn.havaachat.annotation.AutoFill;
 import cn.havaachat.pojo.dto.TokenUserInfoDTO;
 import cn.havaachat.redis.RedisService;
 import cn.havaachat.utils.StringUtils;
@@ -11,8 +10,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
-import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -71,7 +68,7 @@ public class WebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketF
                 return;
             }
             // 校验token
-            TokenUserInfoDTO tokenUserInfoDTO = redisService.getTokenUserInfoDTO(token);
+            TokenUserInfoDTO tokenUserInfoDTO = redisService.getTokenUserInfoDTOByToken(token);
             if(null==tokenUserInfoDTO){
                 log.error("netty:token不存在，断开连接");
                 ctx.close();

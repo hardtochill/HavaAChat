@@ -1,10 +1,7 @@
 package cn.havaachat;
 
-import cn.havaachat.context.BaseContext;
-import cn.havaachat.enums.UserContactStatusEnum;
 import cn.havaachat.mapper.UserContactMapper;
 import cn.havaachat.pojo.dto.TokenUserInfoDTO;
-import cn.havaachat.pojo.entity.UserContact;
 import cn.havaachat.redis.RedisUtils;
 import cn.havaachat.utils.StringUtils;
 import com.alibaba.fastjson.JSON;
@@ -21,7 +18,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -49,7 +45,7 @@ public class ContactTest {
         Map<String,String> jsonMap = new HashMap<>();
         jsonMap.put("contactId","G10500646517");
         System.out.println(JSON.toJSONString(jsonMap));
-        Mockito.when(redisUtils.get(StringUtils.getRedisTokenUserInfoKey(token))).thenReturn(tokenUserInfoDTO);
+        Mockito.when(redisUtils.get(StringUtils.getRedisTokenUserInfoDTOKeyByToken(token))).thenReturn(tokenUserInfoDTO);
         ResultActions resultActions = mockMvc.perform(post("/contact/search")
                 .header("token",token)
                 .contentType(MediaType.APPLICATION_JSON)

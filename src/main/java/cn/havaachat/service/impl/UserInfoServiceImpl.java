@@ -2,14 +2,26 @@ package cn.havaachat.service.impl;
 
 import cn.havaachat.config.AppConfiguration;
 import cn.havaachat.context.BaseContext;
+import cn.havaachat.enums.MessageTypeEnum;
+import cn.havaachat.enums.UserContactStatusEnum;
+import cn.havaachat.enums.UserContactTypeEnum;
+import cn.havaachat.enums.UserStatusEnum;
+import cn.havaachat.mapper.ChatSessionUserMapper;
+import cn.havaachat.mapper.UserContactMapper;
 import cn.havaachat.mapper.UserInfoMapper;
+import cn.havaachat.pojo.dto.MessageSendDTO;
 import cn.havaachat.pojo.dto.SaveUserInfoDTO;
 import cn.havaachat.pojo.dto.TokenUserInfoDTO;
+import cn.havaachat.pojo.entity.ChatSessionUser;
+import cn.havaachat.pojo.entity.UserContact;
 import cn.havaachat.pojo.entity.UserInfo;
 import cn.havaachat.pojo.vo.UserInfoVO;
+import cn.havaachat.redis.RedisService;
+import cn.havaachat.service.ChatSessionUserService;
 import cn.havaachat.service.UserInfoService;
 import cn.havaachat.utils.FilePathUtils;
 import cn.havaachat.utils.StringUtils;
+import cn.havaachat.websocket.MessageHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,16 +30,29 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 @Service
 @Slf4j
 public class UserInfoServiceImpl implements UserInfoService {
     private UserInfoMapper userInfoMapper;
     private AppConfiguration appConfiguration;
+    private ChatSessionUserMapper chatSessionUserMapper;
+    private MessageHandler messageHandler;
+    private UserContactMapper userContactMapper;
+    private ChatSessionUserService chatSessionUserService;
+    private RedisService redisService;
     @Autowired
-    public UserInfoServiceImpl(UserInfoMapper userInfoMapper,AppConfiguration appConfiguration){
+    public UserInfoServiceImpl(UserInfoMapper userInfoMapper,AppConfiguration appConfiguration,ChatSessionUserMapper chatSessionUserMapper,
+                               MessageHandler messageHandler,UserContactMapper userContactMapper,ChatSessionUserService chatSessionUserService,
+                               RedisService redisService){
         this.userInfoMapper=userInfoMapper;
         this.appConfiguration = appConfiguration;
+        this.chatSessionUserMapper = chatSessionUserMapper;
+        this.messageHandler = messageHandler;
+        this.userContactMapper = userContactMapper;
+        this.chatSessionUserService = chatSessionUserService;
+        this.redisService = redisService;
     }
     /**
      * 获取用户信息
@@ -72,14 +97,19 @@ public class UserInfoServiceImpl implements UserInfoService {
         // 该接口不提供修改密码功能，为防止有人绕过前端攻击，需额外把密码置null
         updateUserInfo.setPassword(null);
 
-        // 判断本次修改是否涉及到名称的修改，若涉及名称修改，则还要更新会话中的昵称信息
         UserInfo originUserInfo = userInfoMapper.findById(userId);
+
         userInfoMapper.update(updateUserInfo);
-        String contactNameUpdate = null;
-        if(!originUserInfo.getNickName().equals(updateUserInfo.getNickName())){
-            contactNameUpdate = updateUserInfo.getNickName();
+
+        // 判断本次修改是否涉及到名称的修改，若涉及名称修改，则还要更新redis和会话中的昵称信息
+        if(!originUserInfo.getNickName().equals(updateUserInfo.getNickName())) {
+            // 更新redis中的tokenUserInfoDTO
+            TokenUserInfoDTO tokenUserInfoDTO = redisService.getTokenUserInfoDTOByUserId(userId);
+            tokenUserInfoDTO.setNickName(updateUserInfo.getNickName());
+            redisService.saveTokenUserInfoDTO(tokenUserInfoDTO);
+            // 更新该用户所有好友的会话中的昵称信息
+            chatSessionUserService.updateChatSessionUserName(userId,updateUserInfo.getNickName());
         }
-        // todo 更新会话中的昵称信息
     }
 
     /**

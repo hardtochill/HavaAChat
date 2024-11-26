@@ -12,6 +12,7 @@ import cn.havaachat.pojo.dto.TokenUserInfoDTO;
 import cn.havaachat.pojo.entity.*;
 import cn.havaachat.pojo.vo.GroupInfoVO;
 import cn.havaachat.redis.RedisService;
+import cn.havaachat.service.ChatSessionUserService;
 import cn.havaachat.service.GroupInfoService;
 import cn.havaachat.utils.FilePathUtils;
 import cn.havaachat.utils.StringUtils;
@@ -39,10 +40,12 @@ public class GroupInfoServiceImpl implements GroupInfoService {
     private ChatMessageMapper chatMessageMapper;
     private ChannelContextUtils channelContextUtils;
     private MessageHandler messageHandler;
+    private ChatSessionUserService chatSessionUserService;
     @Autowired
     public GroupInfoServiceImpl(GroupInfoMapper groupInfoMapper,RedisService redisService,UserContactMapper userContactMapper,
                                 AppConfiguration appConfiguration,ChatSessionMapper chatSessionMapper,ChatSessionUserMapper chatSessionUserMapper,
-                                ChannelContextUtils channelContextUtils,ChatMessageMapper chatMessageMapper,MessageHandler messageHandler){
+                                ChannelContextUtils channelContextUtils,ChatMessageMapper chatMessageMapper,MessageHandler messageHandler,
+                                ChatSessionUserService chatSessionUserService){
         this.groupInfoMapper = groupInfoMapper;
         this.redisService = redisService;
         this.userContactMapper = userContactMapper;
@@ -52,6 +55,7 @@ public class GroupInfoServiceImpl implements GroupInfoService {
         this.channelContextUtils = channelContextUtils;
         this.chatMessageMapper = chatMessageMapper;
         this.messageHandler = messageHandler;
+        this.chatSessionUserService = chatSessionUserService;
     }
     /**
      * 新增或修改群组
@@ -137,20 +141,10 @@ public class GroupInfoServiceImpl implements GroupInfoService {
             }
             groupInfoMapper.update(groupInfo);
 
-            // 更新会话表冗余信息
-            // 查看群名称是否修改
+            // 判断本次修改是否涉及到名称的修改，若涉及名称修改，则还要更新会话中的昵称信息
             if (!originGroupInfo.getGroupName().equals(groupInfo.getGroupName())){
-                ChatSessionUser chatSessionUserForUpdate = new ChatSessionUser();
-                chatSessionUserForUpdate.setContactId(groupInfo.getGroupId());
-                chatSessionUserForUpdate.setContactName(groupInfo.getGroupName());
-                chatSessionUserMapper.updateByContactId(chatSessionUserForUpdate);
-                // 发送ws消息
-                MessageSendDTO messageSendDTO = new MessageSendDTO();
-                messageSendDTO.setContactId(groupInfo.getGroupId());
-                messageSendDTO.setContactType(UserContactTypeEnum.GROUP.getType());
-                messageSendDTO.setMessageType(MessageTypeEnum.CONTACT_NAME_UPDATE.getType());
-                messageSendDTO.setExtendData(groupInfo.getGroupName());
-                messageHandler.sendMessage(messageSendDTO);
+                // 更新所有群员会话中的昵称信息
+                chatSessionUserService.updateChatSessionUserName(groupInfo.getGroupId(), groupInfo.getGroupName());
             }
         }
         if(null == saveGroupDTO.getAvatarFile()){

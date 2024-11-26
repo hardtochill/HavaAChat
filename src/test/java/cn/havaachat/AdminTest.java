@@ -38,7 +38,7 @@ public class AdminTest {
         tokenUserInfoDTO.setUserId("U61368327818");
         tokenUserInfoDTO.setAdmin(true);
         String token = "too";
-        Mockito.when(redisUtils.get(StringUtils.getRedisTokenUserInfoKey(token))).thenReturn(tokenUserInfoDTO);
+        Mockito.when(redisUtils.get(StringUtils.getRedisTokenUserInfoDTOKeyByToken(token))).thenReturn(tokenUserInfoDTO);
         ResultActions resultActions = mockMvc.perform(post("/admin/loadUser")
                 .header("token",token)
                 .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
