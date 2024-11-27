@@ -1,6 +1,6 @@
 package cn.havaachat.websocket;
 
-import cn.havaachat.pojo.dto.MessageSendDTO;
+import cn.havaachat.pojo.dto.SendMessageToFrontDTO;
 import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RTopic;
@@ -43,7 +43,7 @@ public class MessageHandler {
     public void listenMessage(){
         RTopic rTopic = redissonClient.getTopic(MESSAGE_TOPIC);
         // 监听通道
-        rTopic.addListener(MessageSendDTO.class,(MessageSendDTO,sendDto)->{
+        rTopic.addListener(SendMessageToFrontDTO.class,(MessageSendDTO, sendDto)->{
             log.info("收到广播消息：{}", JSON.toJSON(sendDto));
             // 发送消息
             channelContextUtils.checkAndSendMessage(sendDto);
@@ -52,11 +52,11 @@ public class MessageHandler {
 
     /**
      * 此处是将消息发往整个集群
-     * @param messageSendDTO
+     * @param sendMessageToFrontDTO
      */
-    public void sendMessage(MessageSendDTO messageSendDTO){
+    public void sendMessage(SendMessageToFrontDTO sendMessageToFrontDTO){
         RTopic rTopic = redissonClient.getTopic(MESSAGE_TOPIC);
         // 向通道发布消息
-        rTopic.publish(messageSendDTO);
+        rTopic.publish(sendMessageToFrontDTO);
     }
 }

@@ -7,13 +7,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 消息发送DTO
+ * 消息发送DTO，后端发给前端
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MessageSendDTO<T> {
+public class SendMessageToFrontDTO<T> {
     /**
      * 消息id
      */

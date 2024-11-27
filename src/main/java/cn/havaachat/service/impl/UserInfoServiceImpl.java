@@ -2,18 +2,11 @@ package cn.havaachat.service.impl;
 
 import cn.havaachat.config.AppConfiguration;
 import cn.havaachat.context.BaseContext;
-import cn.havaachat.enums.MessageTypeEnum;
-import cn.havaachat.enums.UserContactStatusEnum;
-import cn.havaachat.enums.UserContactTypeEnum;
-import cn.havaachat.enums.UserStatusEnum;
 import cn.havaachat.mapper.ChatSessionUserMapper;
 import cn.havaachat.mapper.UserContactMapper;
 import cn.havaachat.mapper.UserInfoMapper;
-import cn.havaachat.pojo.dto.MessageSendDTO;
 import cn.havaachat.pojo.dto.SaveUserInfoDTO;
 import cn.havaachat.pojo.dto.TokenUserInfoDTO;
-import cn.havaachat.pojo.entity.ChatSessionUser;
-import cn.havaachat.pojo.entity.UserContact;
 import cn.havaachat.pojo.entity.UserInfo;
 import cn.havaachat.pojo.vo.UserInfoVO;
 import cn.havaachat.redis.RedisService;
@@ -30,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 @Service
 @Slf4j

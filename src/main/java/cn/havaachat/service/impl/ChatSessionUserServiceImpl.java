@@ -5,7 +5,7 @@ import cn.havaachat.enums.UserContactStatusEnum;
 import cn.havaachat.enums.UserContactTypeEnum;
 import cn.havaachat.mapper.ChatSessionUserMapper;
 import cn.havaachat.mapper.UserContactMapper;
-import cn.havaachat.pojo.dto.MessageSendDTO;
+import cn.havaachat.pojo.dto.SendMessageToFrontDTO;
 import cn.havaachat.pojo.entity.ChatSessionUser;
 import cn.havaachat.pojo.entity.UserContact;
 import cn.havaachat.service.ChatSessionUserService;
@@ -46,12 +46,12 @@ public class ChatSessionUserServiceImpl implements ChatSessionUserService {
             chatSessionUserForUpdate.setContactName(contactName);
             chatSessionUserMapper.updateByContactId(chatSessionUserForUpdate);
             // 向所有群员发送ws消息
-            MessageSendDTO messageSendDTO = new MessageSendDTO();
-            messageSendDTO.setContactId(contactId);
-            messageSendDTO.setContactType(UserContactTypeEnum.GROUP.getType());
-            messageSendDTO.setMessageType(MessageTypeEnum.CONTACT_NAME_UPDATE.getType());
-            messageSendDTO.setExtendData(contactName);
-            messageHandler.sendMessage(messageSendDTO);
+            SendMessageToFrontDTO sendMessageToFrontDTO = new SendMessageToFrontDTO();
+            sendMessageToFrontDTO.setContactId(contactId);
+            sendMessageToFrontDTO.setContactType(UserContactTypeEnum.GROUP.getType());
+            sendMessageToFrontDTO.setMessageType(MessageTypeEnum.CONTACT_NAME_UPDATE.getType());
+            sendMessageToFrontDTO.setExtendData(contactName);
+            messageHandler.sendMessage(sendMessageToFrontDTO);
         }else{ // 用户昵称修改
             // 更新该用户所有好友的会话中的昵称信息
             ChatSessionUser chatSessionUserForUpdate = new ChatSessionUser();
@@ -61,14 +61,14 @@ public class ChatSessionUserServiceImpl implements ChatSessionUserService {
             // 向该用户的所有好友发送ws消息
             List<UserContact> userContactList = userContactMapper.findBatchByUserIdAndContactTypeAndStatus(contactId, UserContactTypeEnum.USER.getType(), UserContactStatusEnum.FRIEND.getStatus());
             for (UserContact userContact : userContactList) {
-                MessageSendDTO messageSendDTO = new MessageSendDTO();
-                messageSendDTO.setSendUserId(contactId);
-                messageSendDTO.setSendUserNickName(contactName);
-                messageSendDTO.setContactId(userContact.getContactId());
-                messageSendDTO.setContactType(UserContactTypeEnum.USER.getType());
-                messageSendDTO.setMessageType(MessageTypeEnum.CONTACT_NAME_UPDATE.getType());
-                messageSendDTO.setExtendData(contactName);
-                messageHandler.sendMessage(messageSendDTO);
+                SendMessageToFrontDTO sendMessageToFrontDTO = new SendMessageToFrontDTO();
+                sendMessageToFrontDTO.setSendUserId(contactId);
+                sendMessageToFrontDTO.setSendUserNickName(contactName);
+                sendMessageToFrontDTO.setContactId(userContact.getContactId());
+                sendMessageToFrontDTO.setContactType(UserContactTypeEnum.USER.getType());
+                sendMessageToFrontDTO.setMessageType(MessageTypeEnum.CONTACT_NAME_UPDATE.getType());
+                sendMessageToFrontDTO.setExtendData(contactName);
+                messageHandler.sendMessage(sendMessageToFrontDTO);
             }
         }
     }

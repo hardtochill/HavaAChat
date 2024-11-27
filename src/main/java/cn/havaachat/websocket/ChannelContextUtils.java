@@ -8,7 +8,7 @@ import cn.havaachat.mapper.ChatMessageMapper;
 import cn.havaachat.mapper.ChatSessionUserMapper;
 import cn.havaachat.mapper.UserContactApplyMapper;
 import cn.havaachat.mapper.UserInfoMapper;
-import cn.havaachat.pojo.dto.MessageSendDTO;
+import cn.havaachat.pojo.dto.SendMessageToFrontDTO;
 import cn.havaachat.pojo.dto.WsInitDataDTO;
 import cn.havaachat.pojo.entity.ChatMessage;
 import cn.havaachat.pojo.entity.ChatSessionUser;
@@ -128,11 +128,11 @@ public class ChannelContextUtils {
         wsInitDataDTO.setApplyCount(applyCount);
 
         // 向刚登陆用户发送初始信息
-        MessageSendDTO messageSendDTO = new MessageSendDTO();
-        messageSendDTO.setMessageType(MessageTypeEnum .INIT.getType());
-        messageSendDTO.setContactId(userId);
-        messageSendDTO.setExtendData(wsInitDataDTO);
-        sendMessage(messageSendDTO,userId);
+        SendMessageToFrontDTO sendMessageToFrontDTO = new SendMessageToFrontDTO();
+        sendMessageToFrontDTO.setMessageType(MessageTypeEnum .INIT.getType());
+        sendMessageToFrontDTO.setContactId(userId);
+        sendMessageToFrontDTO.setExtendData(wsInitDataDTO);
+        sendMessage(sendMessageToFrontDTO,userId);
     }
     /***
      * 将用户加入其所有的GroupChannel，使其能接收到群聊信息
@@ -188,33 +188,33 @@ public class ChannelContextUtils {
 
     /**
      * 检查消息类型并发送消息
-     * @param messageSendDTO
+     * @param sendMessageToFrontDTO
      */
-    public void checkAndSendMessage(MessageSendDTO messageSendDTO){
+    public void checkAndSendMessage(SendMessageToFrontDTO sendMessageToFrontDTO){
         // 获取消息发送类型是单聊还是群聊
-        UserContactTypeEnum userContactTypeEnum = UserContactTypeEnum.getById(messageSendDTO.getContactId());
+        UserContactTypeEnum userContactTypeEnum = UserContactTypeEnum.getById(sendMessageToFrontDTO.getContactId());
         switch (userContactTypeEnum){
             case USER:
-                send2User(messageSendDTO);
+                send2User(sendMessageToFrontDTO);
                 break;
             case GROUP:
-                send2Group(messageSendDTO);
+                send2Group(sendMessageToFrontDTO);
                 break;
         }
     }
 
     /**
      * 向用户发送单聊消息
-     * @param messageSendDTO
+     * @param sendMessageToFrontDTO
      */
-    public void send2User(MessageSendDTO messageSendDTO){
-        String contactId = messageSendDTO.getContactId();
+    public void send2User(SendMessageToFrontDTO sendMessageToFrontDTO){
+        String contactId = sendMessageToFrontDTO.getContactId();
         if (StringUtils.isEmpty(contactId)){
             return;
         }
-        sendMessage(messageSendDTO,contactId);
+        sendMessage(sendMessageToFrontDTO,contactId);
         // 如果该消息是让用户强制下线，则令用户下线
-        if(MessageTypeEnum.FORCE_OFF_LINE.getType().equals(messageSendDTO.getMessageType())){
+        if(MessageTypeEnum.FORCE_OFF_LINE.getType().equals(sendMessageToFrontDTO.getMessageType())){
             closeContext(contactId);
         }
     }
@@ -224,10 +224,10 @@ public class ChannelContextUtils {
      * （1）后端通过receiveId拿到对应的Channel，确定要发给哪个客户端，并将messageSendDTO发送给该客户端
      * （2）前端收到messageSendDTO后，通过messageSendDTO的contactId确定当前聊天界面的联系人是谁，即在跟谁聊天
      * （3）前端通过messageSendDTO的sendUserId确定消息的发送者是谁
-     * @param messageSendDTO
+     * @param sendMessageToFrontDTO
      * @param receiveId
      */
-    public void sendMessage(MessageSendDTO messageSendDTO, String receiveId){
+    public void sendMessage(SendMessageToFrontDTO sendMessageToFrontDTO, String receiveId){
         // 服务端与消息接收方的channel
         Channel receiveChannel = USER_CONTEXT_MAP.get(receiveId);
         if (null==receiveChannel){
@@ -237,24 +237,24 @@ public class ChannelContextUtils {
         /* 特殊情况处理：申请者发送的好友申请被通过后，服务端需要向申请者发送一条ws消息，此时这条消息的发送者是申请者自己，但是联系人是接受者
             类似于A向B发送好友申请，B通过后，A与B的聊天界面上双方都能看到“我是A”
          */
-        if(MessageTypeEnum.ADD_FRIEND_SELF.getType().equals(messageSendDTO.getMessageType())){
-            UserInfo receiveUserInfo = (UserInfo) messageSendDTO.getExtendData();
-            messageSendDTO.setMessageType(MessageTypeEnum.ADD_FRIEND.getType());
-            messageSendDTO.setContactId(receiveUserInfo.getUserId());
-            messageSendDTO.setContactName(receiveUserInfo.getNickName());
-            messageSendDTO.setExtendData(null);
+        if(MessageTypeEnum.ADD_FRIEND_SELF.getType().equals(sendMessageToFrontDTO.getMessageType())){
+            UserInfo receiveUserInfo = (UserInfo) sendMessageToFrontDTO.getExtendData();
+            sendMessageToFrontDTO.setMessageType(MessageTypeEnum.ADD_FRIEND.getType());
+            sendMessageToFrontDTO.setContactId(receiveUserInfo.getUserId());
+            sendMessageToFrontDTO.setContactName(receiveUserInfo.getNickName());
+            sendMessageToFrontDTO.setExtendData(null);
         }else{
-            messageSendDTO.setContactId(messageSendDTO.getSendUserId());
-            messageSendDTO.setContactName(messageSendDTO.getSendUserNickName());
+            sendMessageToFrontDTO.setContactId(sendMessageToFrontDTO.getSendUserId());
+            sendMessageToFrontDTO.setContactName(sendMessageToFrontDTO.getSendUserNickName());
         }
-        receiveChannel.writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(messageSendDTO)));
+        receiveChannel.writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(sendMessageToFrontDTO)));
     }
     /**
      * 向群组发送群聊消息
-     * @param messageSendDTO
+     * @param sendMessageToFrontDTO
      */
-    public void send2Group(MessageSendDTO messageSendDTO){
-        String groupId = messageSendDTO.getContactId();
+    public void send2Group(SendMessageToFrontDTO sendMessageToFrontDTO){
+        String groupId = sendMessageToFrontDTO.getContactId();
         if (StringUtils.isEmpty(groupId)){
             return;
         }
@@ -262,7 +262,7 @@ public class ChannelContextUtils {
         if (null==channelGroup){
             return;
         }
-        channelGroup.writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(messageSendDTO)));
+        channelGroup.writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(sendMessageToFrontDTO)));
     }
 
     /**

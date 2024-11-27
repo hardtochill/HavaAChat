@@ -42,4 +42,8 @@ public class SysSettingDTO implements Serializable {
      * 聊天机器人初始发送语句
      */
     private String robotWelcome = "欢迎使用HavaAChat";
+    /**
+     * 聊天机器人自动回复语句
+     */
+    private String robotAutoResponse = "我只是一个机器人";
 }

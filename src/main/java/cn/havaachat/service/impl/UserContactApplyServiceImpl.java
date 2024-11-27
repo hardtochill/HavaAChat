@@ -14,7 +14,6 @@ import cn.havaachat.pojo.entity.UserContact;
 import cn.havaachat.pojo.entity.UserContactApply;
 import cn.havaachat.pojo.entity.UserInfo;
 import cn.havaachat.pojo.vo.PageResultVO;
-import cn.havaachat.redis.RedisService;
 import cn.havaachat.service.UserContactApplyService;
 import cn.havaachat.service.UserContactService;
 import cn.havaachat.utils.StringUtils;
@@ -27,8 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @Slf4j
@@ -141,11 +138,11 @@ public class UserContactApplyServiceImpl implements UserContactApplyService {
         }
         // 给被申请用户发送ws信息，只有当初次申请 或者 被拒绝或拉黑后再次申请，才向被申请者发送ws消息。如果是已申请但未处理，再次申请时就不再发送ws消息
         if(null==existUserContactApply || !UserContactApplyStatusEnum.INIT.getStatus().equals(existUserContactApply.getStatus())){
-            MessageSendDTO messageSendDTO = new MessageSendDTO();
-            messageSendDTO.setMessageType(MessageTypeEnum.CONTACT_APPLY.getType());
-            messageSendDTO.setMessageContent(applyInfo);
-            messageSendDTO.setContactId(receiveUserId);
-            messageHandler.sendMessage(messageSendDTO);
+            SendMessageToFrontDTO sendMessageToFrontDTO = new SendMessageToFrontDTO();
+            sendMessageToFrontDTO.setMessageType(MessageTypeEnum.CONTACT_APPLY.getType());
+            sendMessageToFrontDTO.setMessageContent(applyInfo);
+            sendMessageToFrontDTO.setContactId(receiveUserId);
+            messageHandler.sendMessage(sendMessageToFrontDTO);
         }
         return joinType;
     }

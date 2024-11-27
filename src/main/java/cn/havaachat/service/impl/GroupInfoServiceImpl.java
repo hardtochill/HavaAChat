@@ -5,7 +5,7 @@ import cn.havaachat.context.BaseContext;
 import cn.havaachat.enums.*;
 import cn.havaachat.exception.BaseException;
 import cn.havaachat.mapper.*;
-import cn.havaachat.pojo.dto.MessageSendDTO;
+import cn.havaachat.pojo.dto.SendMessageToFrontDTO;
 import cn.havaachat.pojo.dto.SaveGroupDTO;
 import cn.havaachat.pojo.dto.SysSettingDTO;
 import cn.havaachat.pojo.dto.TokenUserInfoDTO;
@@ -123,15 +123,15 @@ public class GroupInfoServiceImpl implements GroupInfoService {
             // 将群主加入该群聊的Channel列表
             channelContextUtils.addUser2Group(groupInfo.getGroupOwnerId(), groupInfo.getGroupId());
             // 发送ws消息
-            MessageSendDTO messageSendDTO = new MessageSendDTO();
-            BeanUtils.copyProperties(chatMessage,messageSendDTO);
-            messageSendDTO.setLastMessage(MessageTypeEnum.GROUP_CREATE.getInitMessage());
+            SendMessageToFrontDTO sendMessageToFrontDTO = new SendMessageToFrontDTO();
+            BeanUtils.copyProperties(chatMessage, sendMessageToFrontDTO);
+            sendMessageToFrontDTO.setLastMessage(MessageTypeEnum.GROUP_CREATE.getInitMessage());
             chatSessionUser.setLastMessage(MessageTypeEnum.GROUP_CREATE.getInitMessage());
             chatSessionUser.setLastReceiveTime(now);
             // 刚创建群聊时，群员只有群主自己
             chatSessionUser.setMemberCount(1);
-            messageSendDTO.setExtendData(chatSessionUser);
-            messageHandler.sendMessage(messageSendDTO);
+            sendMessageToFrontDTO.setExtendData(chatSessionUser);
+            messageHandler.sendMessage(sendMessageToFrontDTO);
         }else{ // 修改群组
             log.info("修改群组：{}",saveGroupDTO);
             GroupInfo originGroupInfo = groupInfoMapper.findById(groupInfo.getGroupId());

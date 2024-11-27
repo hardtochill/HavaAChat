@@ -4,7 +4,7 @@ import cn.havaachat.context.BaseContext;
 import cn.havaachat.enums.*;
 import cn.havaachat.exception.BaseException;
 import cn.havaachat.mapper.*;
-import cn.havaachat.pojo.dto.MessageSendDTO;
+import cn.havaachat.pojo.dto.SendMessageToFrontDTO;
 import cn.havaachat.pojo.dto.SysSettingDTO;
 import cn.havaachat.pojo.entity.*;
 import cn.havaachat.pojo.vo.UserContactLoadResultVO;
@@ -203,14 +203,14 @@ public class UserContactServiceImpl implements UserContactService {
 
             // 发送ws消息
             // 向接收者发送ws消息，此时ws消息发送人是申请者，ws消息接收人是接受者
-            MessageSendDTO messageSendDTO = new MessageSendDTO();
-            BeanUtils.copyProperties(chatMessage,messageSendDTO);
-            messageHandler.sendMessage(messageSendDTO);
+            SendMessageToFrontDTO sendMessageToFrontDTO = new SendMessageToFrontDTO();
+            BeanUtils.copyProperties(chatMessage, sendMessageToFrontDTO);
+            messageHandler.sendMessage(sendMessageToFrontDTO);
             // 向申请者自己发送ws消息，这条消息的发送者是申请者自己，即自己给自己发消息，但是联系人是接受者
-            messageSendDTO.setMessageType(MessageTypeEnum.ADD_FRIEND_SELF.getType());
-            messageSendDTO.setContactId(applyUserId);
-            messageSendDTO.setExtendData(receiveUserInfo);
-            messageHandler.sendMessage(messageSendDTO);
+            sendMessageToFrontDTO.setMessageType(MessageTypeEnum.ADD_FRIEND_SELF.getType());
+            sendMessageToFrontDTO.setContactId(applyUserId);
+            sendMessageToFrontDTO.setExtendData(receiveUserInfo);
+            messageHandler.sendMessage(sendMessageToFrontDTO);
         }else{ // 添加群聊
             // 要发给申请者的消息
             UserInfo applyUserInfo = userInfoMapper.findById(applyUserId);
@@ -257,14 +257,14 @@ public class UserContactServiceImpl implements UserContactService {
             channelContextUtils.addUser2Group(applyUserId, groupInfo.getGroupId());
 
             // 发送ws消息
-            MessageSendDTO messageSendDTO = new MessageSendDTO();
-            BeanUtils.copyProperties(chatMessage,messageSendDTO);
-            messageSendDTO.setContactType(UserContactTypeEnum.GROUP.getType());
-            messageSendDTO.setContactName(groupInfo.getGroupName());
+            SendMessageToFrontDTO sendMessageToFrontDTO = new SendMessageToFrontDTO();
+            BeanUtils.copyProperties(chatMessage, sendMessageToFrontDTO);
+            sendMessageToFrontDTO.setContactType(UserContactTypeEnum.GROUP.getType());
+            sendMessageToFrontDTO.setContactName(groupInfo.getGroupName());
             // 查询群成员数量
             Integer memberCount = userContactMapper.countByContactIdAndStatus(groupInfo.getGroupId(), UserContactStatusEnum.FRIEND.getStatus());
-            messageSendDTO.setMemberCount(memberCount);
-            messageHandler.sendMessage(messageSendDTO);
+            sendMessageToFrontDTO.setMemberCount(memberCount);
+            messageHandler.sendMessage(sendMessageToFrontDTO);
         }
     }
 
@@ -364,10 +364,10 @@ public class UserContactServiceImpl implements UserContactService {
         UserInfoVO targetUserInfoVO = new UserInfoVO();
         BeanUtils.copyProperties(targetUserInfo,targetUserInfoVO);
         targetUserInfoVO.setContactStatus(UserContactStatusEnum.NOT_FRIEND.getStatus());
-        // 判断用户是否与目标用户存在好友关系
+        // 判断用户是否与目标用户存在联系关系
         UserContact existContact = userContactMapper.findByUserIdAndContactId(userId, targetUserId);
         if(null!=existContact){
-            // todo 这部分的前端就两种处理方式，如果是FRIEND就显示“发送消息”，其它都显示“加为好友”，看后续“发送消息”是否做校验，如果不做校验，此处还要额外处理 拉黑和删除
+            // 部分的前端就两种处理方式，如果是FRIEND就显示“发送消息”，其它都显示“加为好友”，“发送消息”时再进行删除或拉黑校验
             targetUserInfoVO.setContactStatus(UserContactStatusEnum.FRIEND.getStatus());
         }
         return targetUserInfoVO;
@@ -421,6 +421,7 @@ public class UserContactServiceImpl implements UserContactService {
         }
         userContactList.add(beUserContact);
         userContactMapper.updateBatch(userContactList);
+        // todo 更细redis联系人列表
     }
 
 }
