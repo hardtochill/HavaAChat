@@ -17,6 +17,7 @@ public class UploadFileDTO {
     /**
      * 消息id
      */
+    @NotNull
     private Long messageId;
     /**
      * 文件

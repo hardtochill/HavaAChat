@@ -1,6 +1,8 @@
 package cn.havaachat.service.impl;
 
+import cn.havaachat.config.AppConfiguration;
 import cn.havaachat.constants.AccountConstants;
+import cn.havaachat.constants.FileConstants;
 import cn.havaachat.context.BaseContext;
 import cn.havaachat.enums.MessageStatusEnum;
 import cn.havaachat.enums.MessageTypeEnum;
@@ -15,6 +17,7 @@ import cn.havaachat.pojo.entity.ChatSession;
 import cn.havaachat.pojo.entity.ChatSessionUser;
 import cn.havaachat.redis.RedisService;
 import cn.havaachat.service.ChatService;
+import cn.havaachat.utils.FilePathUtils;
 import cn.havaachat.utils.StringUtils;
 import cn.havaachat.websocket.MessageHandler;
 import jodd.util.ArraysUtil;
@@ -22,7 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.List;
 
 @Service
@@ -32,12 +37,14 @@ public class ChatServiceImpl implements ChatService {
     private ChatMessageMapper chatMessageMapper;
     private ChatSessionMapper chatSessionMapper;
     private MessageHandler messageHandler;
+    private AppConfiguration appConfiguration;
     public ChatServiceImpl(RedisService redisService,ChatMessageMapper chatMessageMapper,ChatSessionMapper chatSessionMapper,
-                           MessageHandler messageHandler){
+                           MessageHandler messageHandler,AppConfiguration appConfiguration){
         this.redisService = redisService;
         this.chatMessageMapper = chatMessageMapper;
         this.chatSessionMapper = chatSessionMapper;
         this.messageHandler = messageHandler;
+        this.appConfiguration = appConfiguration;
     }
     /**
      * 发送消息
@@ -131,5 +138,74 @@ public class ChatServiceImpl implements ChatService {
         // 返回sendMessageToFrontDTO用于消息发送者的前端渲染展示自己发送的消息
         return sendMessageToFrontDTO;
     }
-
+    /**
+     * 上传文件
+     * @param uploadFileDTO
+     */
+    public void uploadFile(UploadFileDTO uploadFileDTO){
+        TokenUserInfoDTO tokenUserInfo = BaseContext.getTokenUserInfo();
+        Long messageId = uploadFileDTO.getMessageId();
+        log.info("上传文件：messageId={}",messageId);
+        // 校验messageId
+        ChatMessage existChatMessage = chatMessageMapper.findById(messageId);
+        if (null==existChatMessage){
+            throw new BaseException(ResponseCodeEnum.CODE_600);
+        }
+        // 校验文件发送者
+        if (!existChatMessage.getSendUserId().equals(tokenUserInfo.getUserId())){
+            throw new BaseException(ResponseCodeEnum.CODE_600);
+        }
+        // 获取文件后缀
+        MultipartFile file = uploadFileDTO.getFile();
+        MultipartFile coverFile = uploadFileDTO.getCover();
+        String fileSuffix = StringUtils.getFileSuffix(file.getOriginalFilename());
+        SysSettingDTO sysSetting = redisService.getSysSetting();
+        // 校验文件后缀及类型
+        if (StringUtils.isEmpty(fileSuffix)){
+            throw new BaseException(ResponseCodeEnum.CODE_600);
+        }
+        // 校验图片文件
+        if (ArraysUtil.contains(FileConstants.IMAGE_SUFFIX_ARRAY,fileSuffix.toLowerCase())
+                && file.getSize()*FileConstants.FILE_SIZE_MB>sysSetting.getMaxImageSize()){
+            throw new BaseException(ResponseCodeEnum.CODE_600);
+        }
+        // 校验视频文件
+        if (ArraysUtil.contains(FileConstants.VIDEO_SUFFIX_ARRAY,fileSuffix.toLowerCase())
+                && file.getSize()*FileConstants.FILE_SIZE_MB>sysSetting.getMaxVideoSize()){
+            throw new BaseException(ResponseCodeEnum.CODE_600);
+        }
+        // 校验其它文件
+        if (file.getSize()*FileConstants.FILE_SIZE_MB>sysSetting.getMaxFileSize()){
+            throw new BaseException(ResponseCodeEnum.CODE_600);
+        }
+        // 文件本地存储
+        String uploadFileFolderPath = FilePathUtils.generateUploadFileFolderPath(appConfiguration.getFileFolder());
+        File uploadFileFolder = new File(uploadFileFolderPath);
+        if (!uploadFileFolder.exists()){
+            uploadFileFolder.mkdirs();
+        }
+        // 原始文件
+        String uploadFilePath = FilePathUtils.generateUploadFilePath(uploadFileFolderPath,messageId,file.getOriginalFilename(),fileSuffix);
+        // 缩略文件
+        String coverUploadFilePath = FilePathUtils.generateCoverUploadFilePath(uploadFileFolderPath,messageId,file.getOriginalFilename());
+        try{
+            file.transferTo(new File(uploadFilePath));
+            coverFile.transferTo(new File(coverUploadFilePath));
+        }catch (Exception e){
+            log.error("存储上传文件失败");
+            throw new BaseException(ResponseCodeEnum.CODE_500);
+        }
+        // 修改ChatMessage状态
+        ChatMessage chatMessageForUpdate = new ChatMessage();
+        chatMessageForUpdate.setMessageId(messageId);
+        chatMessageForUpdate.setStatus(MessageStatusEnum.SENDED.getStatus());
+        chatMessageMapper.update(chatMessageForUpdate);
+        // 发送ws消息给联系人，即文件接收者
+        SendMessageToFrontDTO sendMessageToFrontDTO = new SendMessageToFrontDTO();
+        sendMessageToFrontDTO.setMessageId(messageId);
+        sendMessageToFrontDTO.setMessageType(MessageTypeEnum.FILE_UPLOAD.getType());
+        sendMessageToFrontDTO.setStatus(MessageStatusEnum.SENDED.getStatus());
+        sendMessageToFrontDTO.setContactId(existChatMessage.getContactId());
+        messageHandler.sendMessage(sendMessageToFrontDTO);
+    }
 }

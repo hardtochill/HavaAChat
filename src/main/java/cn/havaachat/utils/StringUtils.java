@@ -186,4 +186,16 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
     public static String getChatSessionIdForGroup(String groupId){
         return transferStringToMd5(groupId);
     }
+
+    /**
+     * 获取文件后缀
+     * @param fileName
+     * @return
+     */
+    public static String getFileSuffix(String fileName){
+        if (!fileName.contains(".")){
+            return null;
+        }
+        return fileName.substring(fileName.lastIndexOf("."));
+    }
 }

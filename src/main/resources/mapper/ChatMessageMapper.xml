@@ -17,4 +17,25 @@
         </foreach>
         and send_time &gt;= #{lastReceiveTime}
     </select>
+    <!--更新-->
+    <update id="update">
+        update chat_message
+        <set>
+            <if test="sessionId!=null">session_id=#{sessionId},</if>
+            <if test="messageType!=null">message_type=#{messageType},</if>
+            <if test="messageContent!=null">message_content=#{messageContent},</if>
+            <if test="sendUserId!=null">send_user_id=#{sendUserId},</if>
+            <if test="sendUserNickName!=null">send_user_nick_name=#{sendUserNickName},</if>
+            <if test="sendTime!=null">send_time=#{sendTime},</if>
+            <if test="contactId!=null">contact_id=#{contactId},</if>
+            <if test="contactType!=null">contact_type=#{contactType},</if>
+            <if test="fileSize!=null">file_size=#{fileSize},</if>
+            <if test="fileName!=null">file_name=#{fileName},</if>
+            <if test="fileType!=null">file_type=#{fileType},</if>
+            <if test="status!=null">status=#{status},</if>
+            <if test="createTime!=null">create_time=#{createTime},</if>
+            <if test="updateTime!=null">update_time=#{updateTime},</if>
+        </set>
+        where message_id=#{messageId}
+    </update>
 </mapper>

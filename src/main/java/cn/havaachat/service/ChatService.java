@@ -14,5 +14,9 @@ public interface ChatService {
      */
      SendMessageToFrontDTO sendMessage(SendMessageToBackendDTO sendMessageToBackendDTO);
 
-
+    /**
+     * 上传文件
+     * @param uploadFileDTO
+     */
+    void uploadFile(UploadFileDTO uploadFileDTO);
 }

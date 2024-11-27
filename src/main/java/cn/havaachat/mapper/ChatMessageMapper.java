@@ -35,4 +35,11 @@ public interface ChatMessageMapper {
      * @return
      */
     List<ChatMessage> findBatchByContactIdListAndTime(@Param("contactIdList") List<String> contactIdList, Long lastReceiveTime);
+
+    /**
+     * 更新
+     * @param chatMessageForUpdate
+     */
+    @AutoFill(OperationTypeEnum.UPDATE)
+    void update(ChatMessage chatMessageForUpdate);
 }

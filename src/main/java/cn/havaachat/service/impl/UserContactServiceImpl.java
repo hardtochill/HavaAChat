@@ -6,6 +6,7 @@ import cn.havaachat.exception.BaseException;
 import cn.havaachat.mapper.*;
 import cn.havaachat.pojo.dto.SendMessageToFrontDTO;
 import cn.havaachat.pojo.dto.SysSettingDTO;
+import cn.havaachat.pojo.dto.UploadFileDTO;
 import cn.havaachat.pojo.entity.*;
 import cn.havaachat.pojo.vo.UserContactLoadResultVO;
 import cn.havaachat.pojo.vo.UserContactSearchResultVO;
@@ -421,7 +422,6 @@ public class UserContactServiceImpl implements UserContactService {
         }
         userContactList.add(beUserContact);
         userContactMapper.updateBatch(userContactList);
-        // todo 更细redis联系人列表
+        // todo 更新redis联系人列表
     }
-
 }

@@ -35,4 +35,10 @@ public class ChatController {
         SendMessageToFrontDTO sendMessageToFrontDTO = chatService.sendMessage(sendMessageToBackendDTO);
         return ResponseUtils.success(sendMessageToFrontDTO);
     }
+    @PostMapping("/uploadFile")
+    @GlobalInterceptor
+    public ResponseVO uploadFile(@Valid UploadFileDTO uploadFileDTO){
+        chatService.uploadFile(uploadFileDTO);
+        return ResponseUtils.success();
+    }
 }
