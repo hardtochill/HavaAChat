@@ -477,7 +477,7 @@ public class RedisUtils {
      */
     public boolean lSetAll(String key, List<?> value) {
         try {
-            redisTemplate.opsForList().rightPushAll(key, value);
+            redisTemplate.opsForList().rightPushAll(key, value.toArray());
             return true;
         } catch (Exception e) {
             e.printStackTrace();
@@ -494,7 +494,7 @@ public class RedisUtils {
      */
     public boolean lSetAll(String key, List<?> value, long time) {
         try {
-            redisTemplate.opsForList().rightPushAll(key, value);
+            redisTemplate.opsForList().rightPushAll(key, value.toArray());
             if (time > 0)
                 expire(key, time);
             return true;
