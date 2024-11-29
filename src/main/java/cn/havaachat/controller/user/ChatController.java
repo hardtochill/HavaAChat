@@ -1,6 +1,7 @@
 package cn.havaachat.controller.user;
 
 import cn.havaachat.annotation.GlobalInterceptor;
+import cn.havaachat.pojo.dto.DownloadFileDTO;
 import cn.havaachat.pojo.dto.SendMessageToBackendDTO;
 import cn.havaachat.pojo.dto.SendMessageToFrontDTO;
 import cn.havaachat.pojo.dto.UploadFileDTO;
@@ -35,10 +36,28 @@ public class ChatController {
         SendMessageToFrontDTO sendMessageToFrontDTO = chatService.sendMessage(sendMessageToBackendDTO);
         return ResponseUtils.success(sendMessageToFrontDTO);
     }
+
+    /**
+     * 文件上传
+     * @param uploadFileDTO
+     * @return
+     */
     @PostMapping("/uploadFile")
     @GlobalInterceptor
     public ResponseVO uploadFile(@Valid UploadFileDTO uploadFileDTO){
         chatService.uploadFile(uploadFileDTO);
+        return ResponseUtils.success();
+    }
+
+    /**
+     * 文件下载
+     * @param downloadFileDTO
+     * @return
+     */
+    @PostMapping("/downloadFile")
+    @GlobalInterceptor
+    public ResponseVO downloadFile(@Valid DownloadFileDTO downloadFileDTO){
+        chatService.downloadFile(downloadFileDTO);
         return ResponseUtils.success();
     }
 }

@@ -1,5 +1,6 @@
 package cn.havaachat.service;
 
+import cn.havaachat.pojo.dto.DownloadFileDTO;
 import cn.havaachat.pojo.dto.SendMessageToBackendDTO;
 import cn.havaachat.pojo.dto.SendMessageToFrontDTO;
 import cn.havaachat.pojo.dto.UploadFileDTO;
@@ -19,4 +20,10 @@ public interface ChatService {
      * @param uploadFileDTO
      */
     void uploadFile(UploadFileDTO uploadFileDTO);
+
+    /**
+     * 下载文件
+     * @param downloadFileDTO
+     */
+    void downloadFile(DownloadFileDTO downloadFileDTO);
 }

@@ -35,6 +35,7 @@ public class FilePathUtils {
 
     /**
      * 生成存储上传文件的文件夹路径
+     * 存储上传文件的文件夹路径：baseFolder/yyyyMMdd
      * @param baseFolderPath
      * @return
      */
@@ -84,7 +85,7 @@ public class FilePathUtils {
     }
     /**
      * 生成存储上传文件的文件路径
-     * 上传文件存储：baseFolderPath/messageId_fileName + fileSuffix
+     * 上传文件存储：baseFolderPath/yyyyMMdd/messageId_fileName + fileSuffix
      * @param folderPath
      * @param messageId
      * @param originFileName
@@ -98,7 +99,7 @@ public class FilePathUtils {
     }
     /**
      * 生成存储上传文件的缩略文件路径
-     * 上传缩略文件存储：baseFolderPath/messageId_fileName_cover.png
+     * 上传缩略文件存储：baseFolderPath/yyyyMMdd/messageId_fileName_cover.png
      * @param folderPath
      * @param messageId
      * @param originFileName

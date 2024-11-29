@@ -25,9 +25,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 @Service
@@ -207,5 +213,39 @@ public class ChatServiceImpl implements ChatService {
         sendMessageToFrontDTO.setStatus(MessageStatusEnum.SENDED.getStatus());
         sendMessageToFrontDTO.setContactId(existChatMessage.getContactId());
         messageHandler.sendMessage(sendMessageToFrontDTO);
+    }
+
+    /**
+     * 下载文件
+     * @param downloadFileDTO
+     */
+    @Override
+    public void downloadFile(DownloadFileDTO downloadFileDTO) {
+        log.info("下载文件：{}",downloadFileDTO);
+        String fileId = downloadFileDTO.getFileId();
+        Boolean showCover = downloadFileDTO.getShowCover();
+        File file = new File("");
+        // 获取本次请求的Response
+        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletResponse response = requestAttributes.getResponse();
+        response.setContentType("application/x-msdownload;charset=UTF-8");
+        response.setHeader("Content-Disposition","attachment;");
+        response.setContentLengthLong(file.length());
+        try(
+                FileInputStream fileInputStream = new FileInputStream(file);
+                OutputStream outputStream = response.getOutputStream();
+                ){
+            // 缓冲区
+            byte[] byteData = new byte[1024];
+            // 读取本地文件数据，输出到响应数据流中
+            int length;
+            while((length=fileInputStream.read(byteData))!=-1){
+                outputStream.write(byteData,0,length);
+            }
+            outputStream.flush();
+        }catch (Exception e){
+            log.error("下载文件失败",e);
+            throw new BaseException(ResponseCodeEnum.CODE_500);
+        }
     }
 }
