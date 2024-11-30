@@ -22,6 +22,14 @@ public interface UserContactMapper {
      */
     @Select("select * from user_contact where user_id=#{userId} and contact_id=#{contactId}")
     UserContact findByUserIdAndContactId(String userId, String contactId);
+    /**
+     * 根据userId和contactId查询
+     * @param userId
+     * @param contactId
+     * @return
+     */
+    @Select("select * from user_contact where user_id=#{userId} and contact_id=#{contactId} and contact_type=#{type} and status=#{status}")
+    UserContact findByUserIdAndContactIdAndTypeAndStatus(String userId, String contactId,Integer type,Integer status);
 
     /**
      * 插入

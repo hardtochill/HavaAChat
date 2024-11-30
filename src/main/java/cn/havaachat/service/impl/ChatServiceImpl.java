@@ -4,20 +4,20 @@ import cn.havaachat.config.AppConfiguration;
 import cn.havaachat.constants.AccountConstants;
 import cn.havaachat.constants.FileConstants;
 import cn.havaachat.context.BaseContext;
-import cn.havaachat.enums.MessageStatusEnum;
-import cn.havaachat.enums.MessageTypeEnum;
-import cn.havaachat.enums.ResponseCodeEnum;
-import cn.havaachat.enums.UserContactTypeEnum;
+import cn.havaachat.enums.*;
 import cn.havaachat.exception.BaseException;
 import cn.havaachat.mapper.ChatMessageMapper;
 import cn.havaachat.mapper.ChatSessionMapper;
+import cn.havaachat.mapper.UserContactMapper;
 import cn.havaachat.pojo.dto.*;
 import cn.havaachat.pojo.entity.ChatMessage;
 import cn.havaachat.pojo.entity.ChatSession;
 import cn.havaachat.pojo.entity.ChatSessionUser;
+import cn.havaachat.pojo.entity.UserContact;
 import cn.havaachat.redis.RedisService;
 import cn.havaachat.service.ChatService;
 import cn.havaachat.utils.FilePathUtils;
+import cn.havaachat.utils.ResponseUtils;
 import cn.havaachat.utils.StringUtils;
 import cn.havaachat.websocket.MessageHandler;
 import jodd.util.ArraysUtil;
@@ -34,6 +34,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.net.ResponseCache;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -44,13 +48,15 @@ public class ChatServiceImpl implements ChatService {
     private ChatSessionMapper chatSessionMapper;
     private MessageHandler messageHandler;
     private AppConfiguration appConfiguration;
+    private UserContactMapper userContactMapper;
     public ChatServiceImpl(RedisService redisService,ChatMessageMapper chatMessageMapper,ChatSessionMapper chatSessionMapper,
-                           MessageHandler messageHandler,AppConfiguration appConfiguration){
+                           MessageHandler messageHandler,AppConfiguration appConfiguration,UserContactMapper userContactMapper){
         this.redisService = redisService;
         this.chatMessageMapper = chatMessageMapper;
         this.chatSessionMapper = chatSessionMapper;
         this.messageHandler = messageHandler;
         this.appConfiguration = appConfiguration;
+        this.userContactMapper = userContactMapper;
     }
     /**
      * 发送消息
@@ -172,28 +178,29 @@ public class ChatServiceImpl implements ChatService {
         }
         // 校验图片文件
         if (ArraysUtil.contains(FileConstants.IMAGE_SUFFIX_ARRAY,fileSuffix.toLowerCase())
-                && file.getSize()*FileConstants.FILE_SIZE_MB>sysSetting.getMaxImageSize()){
+                && file.getSize()>sysSetting.getMaxImageSize()*FileConstants.FILE_SIZE_MB){
             throw new BaseException(ResponseCodeEnum.CODE_600);
         }
         // 校验视频文件
         if (ArraysUtil.contains(FileConstants.VIDEO_SUFFIX_ARRAY,fileSuffix.toLowerCase())
-                && file.getSize()*FileConstants.FILE_SIZE_MB>sysSetting.getMaxVideoSize()){
+                && file.getSize()>sysSetting.getMaxVideoSize()*FileConstants.FILE_SIZE_MB){
             throw new BaseException(ResponseCodeEnum.CODE_600);
         }
         // 校验其它文件
-        if (file.getSize()*FileConstants.FILE_SIZE_MB>sysSetting.getMaxFileSize()){
+        if (file.getSize()>sysSetting.getMaxFileSize()*FileConstants.FILE_SIZE_MB){
             throw new BaseException(ResponseCodeEnum.CODE_600);
         }
         // 文件本地存储
-        String uploadFileFolderPath = FilePathUtils.generateUploadFileFolderPath(appConfiguration.getFileFolder());
+        String uploadFileFolderPath = FilePathUtils.generateUploadFileFolderPath(appConfiguration.getFileFolder(),StringUtils.transferLongToLocalDate(existChatMessage.getSendTime()));
         File uploadFileFolder = new File(uploadFileFolderPath);
         if (!uploadFileFolder.exists()){
             uploadFileFolder.mkdirs();
         }
         // 原始文件
-        String uploadFilePath = FilePathUtils.generateUploadFilePath(uploadFileFolderPath,messageId,file.getOriginalFilename(),fileSuffix);
+        // 注意前端传过来的文件，其文件名不再是原始文件名，而是messageId，因此这里要从数据库中取上传的文件名
+        String uploadFilePath = FilePathUtils.generateUploadFilePath(uploadFileFolderPath,messageId,existChatMessage.getFileName(),fileSuffix);
         // 缩略文件
-        String coverUploadFilePath = FilePathUtils.generateCoverUploadFilePath(uploadFileFolderPath,messageId,file.getOriginalFilename());
+        String coverUploadFilePath = FilePathUtils.generateCoverUploadFilePath(uploadFileFolderPath,messageId,existChatMessage.getFileName());
         try{
             file.transferTo(new File(uploadFilePath));
             coverFile.transferTo(new File(coverUploadFilePath));
@@ -224,10 +231,27 @@ public class ChatServiceImpl implements ChatService {
         log.info("下载文件：{}",downloadFileDTO);
         String fileId = downloadFileDTO.getFileId();
         Boolean showCover = downloadFileDTO.getShowCover();
-        File file = new File("");
+        File file;
+        // 取出本地头像
+        if(!StringUtils.isNumeric(fileId)){ // 获取头像文件
+            String avatarFileFolderPath = FilePathUtils.generateAvatarFileFolderPath(appConfiguration.getFileFolder());
+            // 获取原图或是缩略图
+            String avatarFilePath = showCover?FilePathUtils.generateCoverAvatarFilePath(avatarFileFolderPath,fileId):FilePathUtils.generateAvatarFilePath(avatarFileFolderPath,fileId);
+            file = new File(avatarFilePath);
+        }else{ // 获取聊天文件
+            // 对于聊天文件，前端上传的fileId就是messageId
+            file = downloadChatFile(Long.valueOf(fileId),showCover);
+        }
+        if (!file.exists()){
+            throw new BaseException(ResponseCodeEnum.CODE_602);
+        }
         // 获取本次请求的Response
         ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletResponse response = requestAttributes.getResponse();
+        if (null==response){
+            log.error("下载文件失败");
+            throw new BaseException(ResponseCodeEnum.CODE_500);
+        }
         response.setContentType("application/x-msdownload;charset=UTF-8");
         response.setHeader("Content-Disposition","attachment;");
         response.setContentLengthLong(file.length());
@@ -247,5 +271,36 @@ public class ChatServiceImpl implements ChatService {
             log.error("下载文件失败",e);
             throw new BaseException(ResponseCodeEnum.CODE_500);
         }
+    }
+
+    /**
+     * 下载聊天文件
+     * @param messageId
+     * @param showCover
+     * @return
+     */
+    public File downloadChatFile(Long messageId,Boolean showCover){
+        String userId = BaseContext.getTokenUserInfo().getUserId();
+        ChatMessage chatMessage = chatMessageMapper.findById(messageId);
+        UserContactTypeEnum userContactTypeEnum = UserContactTypeEnum.getById(chatMessage.getContactId());
+        // 若消息是发给用户的，则消息的contactId就是本次请求的userId
+        if (userContactTypeEnum==UserContactTypeEnum.USER && !chatMessage.getContactId().equals(userId)){
+            throw new BaseException(ResponseCodeEnum.CODE_600);
+        }
+        // 若消息是发给群聊的，则本次请求的user必须要在群聊中
+        if (userContactTypeEnum==UserContactTypeEnum.GROUP){
+            UserContact existUserContact = userContactMapper.findByUserIdAndContactIdAndTypeAndStatus(userId, chatMessage.getContactId(), UserContactTypeEnum.GROUP.getType(), UserContactStatusEnum.FRIEND.getStatus());
+            if (null==existUserContact){
+                throw new BaseException(ResponseCodeEnum.CODE_600);
+            }
+        }
+        // 获取本地文件
+        String uploadFileFolderPath = FilePathUtils.generateUploadFileFolderPath(appConfiguration.getFileFolder(), StringUtils.transferLongToLocalDate(chatMessage.getSendTime()));
+        // 原文件或缩略图
+        String fileName = chatMessage.getFileName();
+        String filePath = showCover?
+               FilePathUtils.generateCoverUploadFilePath(uploadFileFolderPath,messageId,fileName):
+               FilePathUtils.generateUploadFilePath(uploadFileFolderPath,messageId,fileName,StringUtils.getFileSuffix(fileName));
+        return new File(filePath);
     }
 }

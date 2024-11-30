@@ -6,6 +6,9 @@ import cn.havaachat.enums.UserContactTypeEnum;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Arrays;
 
 public class StringUtils extends org.apache.commons.lang3.StringUtils {
@@ -197,5 +200,9 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
             return null;
         }
         return fileName.substring(fileName.lastIndexOf("."));
+    }
+
+    public static LocalDate transferLongToLocalDate(Long timestamp){
+        return Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDate();
     }
 }

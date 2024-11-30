@@ -56,8 +56,7 @@ public class ChatController {
      */
     @PostMapping("/downloadFile")
     @GlobalInterceptor
-    public ResponseVO downloadFile(@Valid DownloadFileDTO downloadFileDTO){
+    public void downloadFile(@Valid DownloadFileDTO downloadFileDTO){
         chatService.downloadFile(downloadFileDTO);
-        return ResponseUtils.success();
     }
 }

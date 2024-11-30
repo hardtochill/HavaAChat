@@ -21,15 +21,15 @@ public class SysSettingDTO implements Serializable {
     /**
      * 允许上传最大图片 MB
      */
-    private Integer maxImageSize = 2;
+    private Integer maxImageSize = 5;
     /**
      * 允许上传最大视频 MB
      */
-    private Integer maxVideoSize = 5;
+    private Integer maxVideoSize = 10;
     /**
      * 允许上传最大文件 MB
      */
-    private Integer maxFileSize = 5;
+    private Integer maxFileSize = 15;
     /**
      * 聊天机器人uid
      */

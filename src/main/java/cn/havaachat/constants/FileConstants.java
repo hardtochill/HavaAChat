@@ -26,4 +26,6 @@ public class FileConstants {
     public static final String[] VIDEO_SUFFIX_ARRAY= {".mp4",".avi",".rmvb",".mkv",".mov"};
     // 将B转成MB
     public static final Long FILE_SIZE_MB = 1024*1024L;
+    // 存储聊天文件的文件夹中的时间格式
+    public static final String DATE_PATTERN = "yyyyMM";
 }

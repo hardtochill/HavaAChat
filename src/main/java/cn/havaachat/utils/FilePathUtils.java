@@ -35,15 +35,16 @@ public class FilePathUtils {
 
     /**
      * 生成存储上传文件的文件夹路径
-     * 存储上传文件的文件夹路径：baseFolder/yyyyMMdd
+     * 存储上传文件的文件夹路径：baseFolder/yyyyMM
      * @param baseFolderPath
+     * @param localDate
      * @return
      */
-    public static String generateUploadFileFolderPath(String baseFolderPath){
+    public static String generateUploadFileFolderPath(String baseFolderPath,LocalDate localDate){
         StringBuilder stringBuilder = new StringBuilder(baseFolderPath);
         paddingFilePathSuffix(baseFolderPath,stringBuilder);
         // 取日期做文件夹名
-        String folderName = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String folderName = localDate.format(DateTimeFormatter.ofPattern(FileConstants.DATE_PATTERN));
         return stringBuilder.append(folderName).toString();
     }
     /**
@@ -85,7 +86,7 @@ public class FilePathUtils {
     }
     /**
      * 生成存储上传文件的文件路径
-     * 上传文件存储：baseFolderPath/yyyyMMdd/messageId_fileName + fileSuffix
+     * 上传文件存储：baseFolderPath/yyyyMM/messageId_fileName + fileSuffix
      * @param folderPath
      * @param messageId
      * @param originFileName
@@ -99,7 +100,7 @@ public class FilePathUtils {
     }
     /**
      * 生成存储上传文件的缩略文件路径
-     * 上传缩略文件存储：baseFolderPath/yyyyMMdd/messageId_fileName_cover.png
+     * 上传缩略文件存储：baseFolderPath/yyyyMM/messageId_fileName_cover.png
      * @param folderPath
      * @param messageId
      * @param originFileName
