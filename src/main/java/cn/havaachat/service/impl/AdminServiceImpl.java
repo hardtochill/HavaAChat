@@ -7,23 +7,23 @@ import cn.havaachat.exception.BaseException;
 import cn.havaachat.mapper.*;
 import cn.havaachat.pojo.dto.AppUpdateDTO;
 import cn.havaachat.pojo.dto.PageDTO;
+import cn.havaachat.pojo.dto.SendMessageToFrontDTO;
 import cn.havaachat.pojo.dto.SysSettingDTO;
-import cn.havaachat.pojo.entity.AppUpdate;
-import cn.havaachat.pojo.entity.GroupInfo;
-import cn.havaachat.pojo.entity.UserInfo;
-import cn.havaachat.pojo.entity.UserInfoBeauty;
+import cn.havaachat.pojo.entity.*;
 import cn.havaachat.pojo.vo.PageResultVO;
 import cn.havaachat.redis.RedisService;
 import cn.havaachat.service.AdminService;
 import cn.havaachat.utils.FilePathUtils;
 import cn.havaachat.utils.StringUtils;
 import cn.havaachat.websocket.ChannelContextUtils;
+import cn.havaachat.websocket.MessageHandler;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -45,10 +45,14 @@ public class AdminServiceImpl implements AdminService {
     private RedisService redisService;
     private AppConfiguration appConfiguration;
     private ChannelContextUtils channelContextUtils;
+    private ChatSessionMapper chatSessionMapper;
+    private ChatMessageMapper chatMessageMapper;
+    private MessageHandler messageHandler;
     @Autowired
     public AdminServiceImpl(UserInfoMapper userInfoMapper,GroupInfoMapper groupInfoMapper,UserInfoBeautyMapper userInfoBeautyMapper
             ,UserContactMapper userContactMapper,RedisService redisService,AppConfiguration appConfiguration
-            ,ChannelContextUtils channelContextUtils){
+            ,ChannelContextUtils channelContextUtils,ChatSessionMapper chatSessionMapper,ChatMessageMapper chatMessageMapper
+            ,MessageHandler messageHandler){
         this.userInfoMapper=userInfoMapper;
         this.groupInfoMapper = groupInfoMapper;
         this.userInfoBeautyMapper=userInfoBeautyMapper;
@@ -56,6 +60,9 @@ public class AdminServiceImpl implements AdminService {
         this.redisService = redisService;
         this.appConfiguration = appConfiguration;
         this.channelContextUtils = channelContextUtils;
+        this.chatSessionMapper = chatSessionMapper;
+        this.chatMessageMapper = chatMessageMapper;
+        this.messageHandler = messageHandler;
     }
 
     /**
@@ -184,47 +191,6 @@ public class AdminServiceImpl implements AdminService {
         userInfoBeautyMapper.deleteById(id);
     }
 
-    /**
-     * 获取群组列表
-     * @param pageDTO
-     * @param groupId
-     * @param groupNameFuzzy
-     * @param groupOwnerId
-     * @return
-     */
-    @Override
-    public PageResultVO loadGroup(PageDTO pageDTO,String groupId,String groupNameFuzzy,String groupOwnerId) {
-        log.info("管理后台：分页查询群组列表：{}",pageDTO);
-        PageHelper.startPage(pageDTO.getPageNo(),pageDTO.getPageSize());
-        GroupInfo groupInfoForQuery = new GroupInfo();
-        groupInfoForQuery.setGroupId(StringUtils.isEmpty(groupId)?null:groupId);
-        groupInfoForQuery.setGroupName(StringUtils.isEmpty(groupNameFuzzy)?null:groupNameFuzzy);
-        groupInfoForQuery.setGroupOwnerId(StringUtils.isEmpty(groupOwnerId)?null:groupOwnerId);
-        Page<GroupInfo> page = groupInfoMapper.findBatch(groupInfoForQuery);
-        return new PageResultVO(pageDTO.getPageNo(), pageDTO.getPageSize(), page.getTotal(),page.getResult());
-    }
-
-    /**
-     * 解散群组
-     * @param groupId
-     */
-    @Override
-    public void dissolutionGroup(String groupId) {
-        log.info("管理后台：解散群组：groupId：{}",groupId);
-        GroupInfo existGroupInfo = groupInfoMapper.findById(groupId);
-        if(null==existGroupInfo){
-            throw new BaseException(ResponseCodeEnum.CODE_600);
-        }
-        // 更新群组状态
-        GroupInfo groupInfoForUpdate = new GroupInfo();
-        groupInfoForUpdate.setGroupId(groupId);
-        groupInfoForUpdate.setStatus(GroupStatusEnum.DISSOLUTION.getStatus());
-        groupInfoMapper.update(groupInfoForUpdate);
-        // 更新与群组相关的所有联系
-        userContactMapper.updateStatusByContactId(UserContactStatusEnum.DEL.getStatus(),groupId);
-        // todo 移除相关群员的联系人缓存
-        // todo 发消息：1.更新会话信息，2.记录群消息，3.发送解散通知
-    }
     /**
      * 保存系统设置
      * @param sysSettingDTO

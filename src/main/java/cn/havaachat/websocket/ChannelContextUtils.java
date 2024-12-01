@@ -132,7 +132,7 @@ public class ChannelContextUtils {
         sendMessageToFrontDTO.setMessageType(MessageTypeEnum .INIT.getType());
         sendMessageToFrontDTO.setContactId(userId);
         sendMessageToFrontDTO.setExtendData(wsInitDataDTO);
-        sendMessage(sendMessageToFrontDTO,userId);
+        sendMessageToUser(sendMessageToFrontDTO,userId);
     }
     /***
      * 将用户加入其所有的GroupChannel，使其能接收到群聊信息
@@ -212,7 +212,7 @@ public class ChannelContextUtils {
         if (StringUtils.isEmpty(contactId)){
             return;
         }
-        sendMessage(sendMessageToFrontDTO,contactId);
+        sendMessageToUser(sendMessageToFrontDTO,contactId);
         // 如果该消息是让用户强制下线，则令用户下线
         if(MessageTypeEnum.FORCE_OFF_LINE.getType().equals(sendMessageToFrontDTO.getMessageType())){
             closeContext(contactId);
@@ -227,7 +227,7 @@ public class ChannelContextUtils {
      * @param sendMessageToFrontDTO
      * @param receiveId
      */
-    public void sendMessage(SendMessageToFrontDTO sendMessageToFrontDTO, String receiveId){
+    public void sendMessageToUser(SendMessageToFrontDTO sendMessageToFrontDTO, String receiveId){
         // 服务端与消息接收方的channel
         Channel receiveChannel = USER_CONTEXT_MAP.get(receiveId);
         if (null==receiveChannel){
@@ -263,6 +263,22 @@ public class ChannelContextUtils {
             return;
         }
         channelGroup.writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(sendMessageToFrontDTO)));
+        // 用户退出或被移出群聊
+        Integer messageType = sendMessageToFrontDTO.getMessageType();
+        if (MessageTypeEnum.LEAVE_GROUP.getType().equals(messageType) || MessageTypeEnum.REMOVE_GROUP.getType().equals(messageType)){
+            String userId = (String)sendMessageToFrontDTO.getExtendData();
+            // 移除channel缓存
+            Channel channel = USER_CONTEXT_MAP.get(userId);
+            if (null==channel){
+                return;
+            }
+            channelGroup.remove(channel);
+        }
+        // 解散群聊
+        if (MessageTypeEnum.DISSOLUTION_GROUP.getType().equals(messageType)){
+            GROUP_CONTEXT_MAP.remove(groupId);
+            channelGroup.close();
+        }
     }
 
     /**

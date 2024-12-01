@@ -90,8 +90,6 @@ public class ChatServiceImpl implements ChatService {
                 }
             }
         }
-        // todo 校验是否被对方删除或拉黑
-
         Long now = System.currentTimeMillis();
 
         // 保存ChatMessage

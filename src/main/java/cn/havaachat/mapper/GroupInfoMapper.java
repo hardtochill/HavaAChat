@@ -42,12 +42,13 @@ public interface GroupInfoMapper {
      * @param groupOwnerId
      * @return
      */
-    @Select("select * from group_info where group_owner_id=#{groupOwnerId} order by create_time desc")
-    List<GroupInfo> findBatchByGroupOwnerId(String groupOwnerId);
+    @Select("select * from group_info where group_owner_id=#{groupOwnerId} and status=#{status} order by create_time desc")
+    List<GroupInfo> findBatchByGroupOwnerIdAndStatus(String groupOwnerId,Integer status);
 
     /**
      * 分页批量查找
      * @return
      */
     Page<GroupInfo> findBatch(GroupInfo groupInfo);
+
 }

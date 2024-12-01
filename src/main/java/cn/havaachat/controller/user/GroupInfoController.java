@@ -2,8 +2,11 @@ package cn.havaachat.controller.user;
 
 import cn.havaachat.annotation.GlobalInterceptor;
 import cn.havaachat.context.BaseContext;
+import cn.havaachat.enums.GroupLeaveTypeEnum;
+import cn.havaachat.enums.MessageTypeEnum;
 import cn.havaachat.enums.ResponseCodeEnum;
 import cn.havaachat.exception.BaseException;
+import cn.havaachat.pojo.dto.AddOrRemoveGroupUserDTO;
 import cn.havaachat.pojo.dto.SaveGroupDTO;
 import cn.havaachat.pojo.entity.GroupInfo;
 import cn.havaachat.pojo.vo.GroupInfoVO;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.List;
 
@@ -77,5 +81,41 @@ public class GroupInfoController {
     public ResponseVO<GroupInfoVO> getGroupInfo4Chat(@NotEmpty String groupId){
         GroupInfoVO groupInfoVO = groupInfoService.getGroupInfo4Chat(groupId);
         return ResponseUtils.success(groupInfoVO);
+    }
+
+    /**
+     * 退出群聊
+     * @param groupId
+     * @return
+     */
+    @GlobalInterceptor
+    @PostMapping("/leaveGroup")
+    public ResponseVO leaveGroup(@NotEmpty String groupId){
+        String userId = BaseContext.getTokenUserInfo().getUserId();
+        groupInfoService.leaveGroup(userId,groupId, MessageTypeEnum.LEAVE_GROUP);
+        return ResponseUtils.success();
+    }
+
+    /**
+     * 添加或移除群成员
+     * @param addOrRemoveGroupUserDTO
+     * @return
+     */
+    @GlobalInterceptor
+    @PostMapping("/addOrRemoveGroupUser")
+    public ResponseVO addOrRemoveGroupUser(@Valid AddOrRemoveGroupUserDTO addOrRemoveGroupUserDTO){
+        groupInfoService.addOrRemoveGroupUser(addOrRemoveGroupUserDTO);
+        return ResponseUtils.success();
+    }
+
+    /**
+     * 解散群组
+     * @param groupId
+     * @return
+     */
+    @PostMapping("/dissolutionGroup")
+    public ResponseVO dissolutionGroup(@NotNull String groupId){
+        groupInfoService.dissolutionGroup(groupId);
+        return ResponseUtils.success();
     }
 }

@@ -57,21 +57,6 @@ public interface AdminService {
      */
     void deleteBeautyAccount(Integer id);
 
-    /**
-     * 获取群组列表
-     * @param pageDTO
-     * @param groupId
-     * @param groupNameFuzzy
-     * @param groupOwnerId
-     * @return
-     */
-    PageResultVO loadGroup(PageDTO pageDTO,String groupId,String groupNameFuzzy,String groupOwnerId);
-
-    /**
-     * 解散群组
-     * @param groupId
-     */
-    void dissolutionGroup(String groupId);
 
     /**
      * 保存系统设置

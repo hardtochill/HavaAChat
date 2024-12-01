@@ -6,6 +6,7 @@ import cn.havaachat.pojo.dto.PageDTO;
 import cn.havaachat.pojo.vo.PageResultVO;
 import cn.havaachat.pojo.vo.ResponseVO;
 import cn.havaachat.service.AdminService;
+import cn.havaachat.service.GroupInfoService;
 import cn.havaachat.utils.ResponseUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -24,9 +25,11 @@ import javax.validation.constraints.NotNull;
 @Validated
 public class AdminGroupInfoController {
     private AdminService adminService;
+    private GroupInfoService groupInfoService;
     @Autowired
-    public AdminGroupInfoController(AdminService adminService){
+    public AdminGroupInfoController(AdminService adminService,GroupInfoService groupInfoService){
         this.adminService = adminService;
+        this.groupInfoService = groupInfoService;
     }
     /**
      * 获取群组列表
@@ -40,7 +43,7 @@ public class AdminGroupInfoController {
     @GlobalInterceptor(checkAdmin = true)
     @PageQueryAutoFill
     public ResponseVO<PageResultVO> loadGroup(@Valid PageDTO pageDTO, String groupId, String groupNameFuzzy, String groupOwnerId){
-        PageResultVO pageResultVO = adminService.loadGroup(pageDTO,groupId,groupNameFuzzy,groupOwnerId);
+        PageResultVO pageResultVO = groupInfoService.loadGroup(pageDTO,groupId,groupNameFuzzy,groupOwnerId);
         return ResponseUtils.success(pageResultVO);
     }
 
@@ -52,7 +55,7 @@ public class AdminGroupInfoController {
     @PostMapping("/dissolutionGroup")
     @GlobalInterceptor(checkAdmin = true)
     public ResponseVO dissolutionGroup(@NotNull String groupId){
-        adminService.dissolutionGroup(groupId);
+        groupInfoService.dissolutionGroup(groupId);
         return ResponseUtils.success();
     }
 }

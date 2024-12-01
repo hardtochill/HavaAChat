@@ -5,10 +5,7 @@ import cn.havaachat.enums.OperationTypeEnum;
 import cn.havaachat.pojo.entity.UserContact;
 import cn.havaachat.pojo.entity.UserContactApply;
 import cn.havaachat.pojo.vo.UserContactLoadResultVO;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -23,13 +20,13 @@ public interface UserContactMapper {
     @Select("select * from user_contact where user_id=#{userId} and contact_id=#{contactId}")
     UserContact findByUserIdAndContactId(String userId, String contactId);
     /**
-     * 根据userId和contactId查询
+     * 根据userId和contactId查询和联系人类型和状态
      * @param userId
      * @param contactId
      * @return
      */
-    @Select("select * from user_contact where user_id=#{userId} and contact_id=#{contactId} and contact_type=#{type} and status=#{status}")
-    UserContact findByUserIdAndContactIdAndTypeAndStatus(String userId, String contactId,Integer type,Integer status);
+    @Select("select * from user_contact where user_id=#{userId} and contact_id=#{contactId} and contact_type=#{contactType} and status=#{status}")
+    UserContact findByUserIdAndContactIdAndTypeAndStatus(String userId, String contactId,Integer contactType,Integer status);
 
     /**
      * 插入
@@ -46,6 +43,13 @@ public interface UserContactMapper {
     @Select("select count(*) from user_contact where contact_id=#{contactId} and status=#{status}")
     Integer countByContactIdAndStatus(String contactId,Integer status);
 
+    /**
+     * 根据群聊id，查询该群所有联系
+     * @param contactId
+     * @return
+     */
+    @Select("select * from user_contact where contact_id=#{contactId}")
+    List<UserContact> findBatchByContactId(String contactId);
     /**
      * 根据群聊id，查询该群所有有效联系，并关联查询user_info表，查询每个联系人的名称和性别
      * @param contactId
@@ -106,10 +110,18 @@ public interface UserContactMapper {
 
     /**
      * 根据contactId更新联系状态
-     * @param status
-     * @param contactId
+     * @param userContact
      */
     @AutoFill(OperationTypeEnum.UPDATE)
-    @Delete("update user_contact set status=#{status} where contact_id=#{contactId}")
-    void updateStatusByContactId(Integer status,String contactId);
+    @Update("update user_contact set status=#{status} where contact_id=#{contactId}")
+    void updateStatusByContactId(UserContact userContact);
+
+    /**
+     * 删除联系人
+     * @param userId
+     * @param contactId
+     * @return
+     */
+    @Delete("delete from user_contact where user_id=#{userId} and contact_id=#{contactId}")
+    Integer deleteByUserIdAndContactId(String userId,String contactId);
 }

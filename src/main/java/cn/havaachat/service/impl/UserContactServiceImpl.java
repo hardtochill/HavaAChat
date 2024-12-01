@@ -362,13 +362,16 @@ public class UserContactServiceImpl implements UserContactService {
         String userId = BaseContext.getTokenUserInfo().getUserId();
         log.info("获取目标用户信息，userId：{}，targetUserId：{}",userId,targetUserId);
         UserInfo targetUserInfo = userInfoMapper.findById(targetUserId);
+        if (null==targetUserInfo){
+            throw new BaseException(ResponseCodeEnum.CODE_600);
+        }
         UserInfoVO targetUserInfoVO = new UserInfoVO();
         BeanUtils.copyProperties(targetUserInfo,targetUserInfoVO);
         targetUserInfoVO.setContactStatus(UserContactStatusEnum.NOT_FRIEND.getStatus());
         // 判断用户是否与目标用户存在联系关系
         UserContact existContact = userContactMapper.findByUserIdAndContactId(userId, targetUserId);
         if(null!=existContact){
-            // 部分的前端就两种处理方式，如果是FRIEND就显示“发送消息”，其它都显示“加为好友”，“发送消息”时再进行删除或拉黑校验
+            // 这部分的前端就两种处理方式，如果是FRIEND就显示“发送消息”，其它都显示“加为好友”，“发送消息”时再进行删除或拉黑校验
             targetUserInfoVO.setContactStatus(UserContactStatusEnum.FRIEND.getStatus());
         }
         return targetUserInfoVO;
@@ -422,7 +425,8 @@ public class UserContactServiceImpl implements UserContactService {
         }
         userContactList.add(beUserContact);
         userContactMapper.updateBatch(userContactList);
-        // 移除redis中的联系人
+        // 当前用户的redis联系人缓存移除被删除或拉黑用户
         redisService.removeUserContactId(userId,contactId);
+        // todo 被删除或拉黑用户的redis联系人缓存移除当前用户
     }
 }
