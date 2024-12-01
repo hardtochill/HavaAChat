@@ -71,7 +71,7 @@ public class UserInfoController {
     @PostMapping("/logout")
     @GlobalInterceptor
     public ResponseVO logout(){
-        // todo 退出登录 关闭ws连接
+        userInfoService.logout();
         return ResponseUtils.success();
     }
 }

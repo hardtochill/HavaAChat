@@ -14,6 +14,7 @@ import cn.havaachat.service.ChatSessionUserService;
 import cn.havaachat.service.UserInfoService;
 import cn.havaachat.utils.FilePathUtils;
 import cn.havaachat.utils.StringUtils;
+import cn.havaachat.websocket.ChannelContextUtils;
 import cn.havaachat.websocket.MessageHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -29,22 +30,17 @@ import java.io.IOException;
 public class UserInfoServiceImpl implements UserInfoService {
     private UserInfoMapper userInfoMapper;
     private AppConfiguration appConfiguration;
-    private ChatSessionUserMapper chatSessionUserMapper;
-    private MessageHandler messageHandler;
-    private UserContactMapper userContactMapper;
     private ChatSessionUserService chatSessionUserService;
     private RedisService redisService;
+    private ChannelContextUtils channelContextUtils;
     @Autowired
-    public UserInfoServiceImpl(UserInfoMapper userInfoMapper,AppConfiguration appConfiguration,ChatSessionUserMapper chatSessionUserMapper,
-                               MessageHandler messageHandler,UserContactMapper userContactMapper,ChatSessionUserService chatSessionUserService,
-                               RedisService redisService){
+    public UserInfoServiceImpl(UserInfoMapper userInfoMapper,AppConfiguration appConfiguration,ChatSessionUserService chatSessionUserService,
+                               RedisService redisService,ChannelContextUtils channelContextUtils){
         this.userInfoMapper=userInfoMapper;
         this.appConfiguration = appConfiguration;
-        this.chatSessionUserMapper = chatSessionUserMapper;
-        this.messageHandler = messageHandler;
-        this.userContactMapper = userContactMapper;
         this.chatSessionUserService = chatSessionUserService;
         this.redisService = redisService;
+        this.channelContextUtils = channelContextUtils;
     }
     /**
      * 获取用户信息
@@ -111,12 +107,21 @@ public class UserInfoServiceImpl implements UserInfoService {
     @Override
     public void updatePassword(String password) {
         String userId = BaseContext.getTokenUserInfo().getUserId();
-        log.info("修改密码：userId：{}",userId);
+        log.info("修改密码：userId={}",userId);
         UserInfo userInfo = new UserInfo();
         userInfo.setUserId(userId);
         userInfo.setPassword(StringUtils.transferStringToMd5(password));
         userInfoMapper.update(userInfo);
-        // todo 强制退出，重新登陆
+        channelContextUtils.closeContext(userId);
     }
 
+    /**
+     * 退出登录
+     */
+    @Override
+    public void logout() {
+        String userId = BaseContext.getTokenUserInfo().getUserId();
+        log.info("退出登录：userId={}",userId);
+        channelContextUtils.closeContext(userId);
+    }
 }

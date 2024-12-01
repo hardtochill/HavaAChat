@@ -23,4 +23,9 @@ public interface UserInfoService {
      * @param password
      */
     void updatePassword(String password);
+
+    /**
+     * 退出登录
+     */
+    void logout();
 }
