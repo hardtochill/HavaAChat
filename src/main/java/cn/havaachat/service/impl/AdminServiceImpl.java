@@ -17,6 +17,7 @@ import cn.havaachat.redis.RedisService;
 import cn.havaachat.service.AdminService;
 import cn.havaachat.utils.FilePathUtils;
 import cn.havaachat.utils.StringUtils;
+import cn.havaachat.websocket.ChannelContextUtils;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.extern.slf4j.Slf4j;
@@ -43,18 +44,18 @@ public class AdminServiceImpl implements AdminService {
     private UserContactMapper userContactMapper;
     private RedisService redisService;
     private AppConfiguration appConfiguration;
-    private AppUpdateMapper appUpdateMapper;
+    private ChannelContextUtils channelContextUtils;
     @Autowired
     public AdminServiceImpl(UserInfoMapper userInfoMapper,GroupInfoMapper groupInfoMapper,UserInfoBeautyMapper userInfoBeautyMapper
             ,UserContactMapper userContactMapper,RedisService redisService,AppConfiguration appConfiguration
-            ,AppUpdateMapper appUpdateMapper){
+            ,ChannelContextUtils channelContextUtils){
         this.userInfoMapper=userInfoMapper;
         this.groupInfoMapper = groupInfoMapper;
         this.userInfoBeautyMapper=userInfoBeautyMapper;
         this.userContactMapper = userContactMapper;
         this.redisService = redisService;
         this.appConfiguration = appConfiguration;
-        this.appUpdateMapper=appUpdateMapper;
+        this.channelContextUtils = channelContextUtils;
     }
 
     /**
@@ -99,7 +100,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public void forceOffLine(String userId) {
         log.info("管理后台：强制下线：userId：{}",userId);
-        // todo 强制下线
+        channelContextUtils.closeContext(userId);
     }
     /**
      * 获取靓号列表

@@ -160,7 +160,14 @@ public class RedisServiceImpl implements RedisService{
         }
         redisUtils.lSet(StringUtils.getRedisUserContactIdListKeyByUserId(userId),userContactId,RedisConstants.REDIS_KEY_EXPIRES_TOKEN);
     }
-
+    /**
+     * 移除单个用户联系人
+     * @param userId
+     * @param userContactId
+     */
+    public void removeUserContactId(String userId,String userContactId){
+        redisUtils.lRemove(StringUtils.getRedisUserContactIdListKeyByUserId(userId),1,userContactId);
+    }
     /**
      * 获取用户联系人列表
      * @param userId

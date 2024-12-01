@@ -88,6 +88,13 @@ public interface RedisService {
      * @param userContactId
      */
     void saveUserContactId(String userId,String userContactId);
+
+    /**
+     * 移除单个用户联系人
+     * @param userId
+     * @param userContactId
+     */
+    void removeUserContactId(String userId,String userContactId);
     /**
      * 获取用户联系人列表
      * @param userId

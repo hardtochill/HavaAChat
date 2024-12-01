@@ -422,6 +422,7 @@ public class UserContactServiceImpl implements UserContactService {
         }
         userContactList.add(beUserContact);
         userContactMapper.updateBatch(userContactList);
-        // todo 更新redis联系人列表
+        // 移除redis中的联系人
+        redisService.removeUserContactId(userId,contactId);
     }
 }
