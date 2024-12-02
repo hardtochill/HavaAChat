@@ -107,7 +107,11 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public void forceOffLine(String userId) {
         log.info("管理后台：强制下线：userId：{}",userId);
-        channelContextUtils.closeContext(userId);
+        SendMessageToFrontDTO sendMessageToFrontDTO = new SendMessageToFrontDTO();
+        sendMessageToFrontDTO.setContactId(userId);
+        sendMessageToFrontDTO.setContactType(UserContactTypeEnum.USER.getType());
+        sendMessageToFrontDTO.setMessageType(MessageTypeEnum.FORCE_OFF_LINE.getType());
+        messageHandler.sendMessage(sendMessageToFrontDTO);
     }
     /**
      * 获取靓号列表

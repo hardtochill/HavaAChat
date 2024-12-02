@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.*;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
@@ -53,6 +54,10 @@ public class UserInfo extends BaseEntity{
      */
     private Integer status;
     /**
+     * 是否在线
+     */
+    private Integer onlineType;
+    /**
      * 最后登陆时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
@@ -63,4 +68,11 @@ public class UserInfo extends BaseEntity{
      * 最后离线时间
      */
     private Long lastOffTime;
+
+    public Integer getOnlineType(){
+        if (lastLoginTime!=null && Timestamp.valueOf(lastLoginTime).getTime()>lastOffTime){
+            return 1;
+        }
+        return 0;
+    }
 }

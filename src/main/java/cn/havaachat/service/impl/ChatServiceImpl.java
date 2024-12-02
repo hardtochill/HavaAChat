@@ -91,7 +91,6 @@ public class ChatServiceImpl implements ChatService {
             }
         }
         Long now = System.currentTimeMillis();
-
         // 保存ChatMessage
         ChatMessage chatMessage = new ChatMessage();
         BeanUtils.copyProperties(sendMessageToBackendDTO,chatMessage);

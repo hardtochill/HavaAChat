@@ -427,6 +427,7 @@ public class UserContactServiceImpl implements UserContactService {
         userContactMapper.updateBatch(userContactList);
         // 当前用户的redis联系人缓存移除被删除或拉黑用户
         redisService.removeUserContactId(userId,contactId);
-        // todo 被删除或拉黑用户的redis联系人缓存移除当前用户
+        // 被删除或拉黑用户的redis联系人缓存移除当前用户
+        redisService.removeUserContactId(contactId,userId);
     }
 }
