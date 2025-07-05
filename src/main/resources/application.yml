@@ -68,7 +68,7 @@ logback:
       level: info
 # 超级管理员组
 admin:
-  emails: test@qq.com
+  emails: test13@qq.com
 # 文件本地存放路径
 project:
   folder: ${hava-a-chat.project.folder}
